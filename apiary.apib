@@ -1,0 +1,2019 @@
+FORMAT: 1A
+https://app.apiary.io/byboxstockonnectapi/settings
+# ByBox Partner API
+
+## Purpose
+
+This document describes the Stockonnect integration process for those wishing to integrate over HTTP.
+For more information about authentication and authorisation please see [the ByBox Stockonnect Authentication API documentation](http://docs.byboxauthentication.apiary.io/).
+
+Using this site you can:
+
+ * Generate sample code in cURL, Java, JavaScript, Node.js, Perl, Python, PHP, Ruby, GO, C#, Visual Basic, Groovy, Objective C, and Swift.
+ * View the structural requirements of requests for various HTTP endpoints.
+ * View the structure of expected responses and their associated HTTP status codes.
+
+Find out more about [using this documentation](https://blog.apiary.io/2014/03/21/Re-API-Design-for-Humans).
+
+## Authentication
+
+In this documentation `BEARER-TOKEN-FROM-AUTHN-API` refers to the token obtained from the [the ByBox Stockonnect Authentication API](http://docs.byboxauthentication.apiary.io/).
+The identity of the client making the request is inferred using the `BEARER-TOKEN-FROM-AUTHN-API`. 
+A client will be issued an api token to pass to the authentication api that will then return a token to be used in this api
+
+## Glossary
+
+The following terms are used throughout this documentation.
+
+  * `User` - An end user of the Stockonnect App. Probably a delivery driver or engineer.
+  * `Location` - The location and logical grouping of a number of doors.
+  * `Door` - A door at a location that can hold contents.
+  * `Lock` - The physical part of a door that enables locking and unlocking.
+  * `Sku` -  A product identification code for a product
+  * `Order` - A logical grouping of products that may be delivered/collected.
+  * `Package` - Identifiable by a barcode and may contain 1+ physical items.
+  * `Activity` - A visit to a door, includes at least an unlocked and locked event.
+
+## Assumptions
+
+This documentation assumes identifier data such as `door` and `user` are values defined by the customer and already set up in the Stockonnect system 
+
+# Group Users
+
+`Users` are uniquly identified by their `identifier` and must also contain an `email` and `username`.
+
+## /Users
+
+### CREATE [POST]
+
+Creates a new `User` with the supplied `identifier` and other values
+
++ Request (application/json)
+    
+    ##### The following defines the body specification for the `PUT` request.
+    + `identifier` (string) -- The value that uniquely identifies a `User`
+    + `username` (string) -- The `username` associated with the `User`.
+    + `firstName` (string) -- The `firstName` associated with the `User`.
+    + `lastName` (string) -- The `lastName` associated with the `User`.
+    + `email` (string) -- The `email` associated with the `User`.
+    + `role` (enum[string]) - The role the user has
+        + Members
+            + `user`
+            + `admin`
+            + `readonly admin`
+    + `sendRegistrationNotification` (bool) -- Allow stockonnect to send the user a registration email or not
+     
+    + Headers
+
+            Authorization: Bearer BEARER-TOKEN-FROM-AUTHN-API
+
+    + Body
+
+            {
+                "identifier": "DJ001",
+                "username": "d.f.jones",
+                "firstName": "Danny",
+                "lastName": "Jones",
+                "email": "email@address.com",
+                "role": "user",
+                "sendRegistrationNotification": false
+            }
+
++ Response 200 (application/json; charset=utf-8)
+This is returned when the `User` was accepted for creation.
+
+    ##### The following defines the body specification for the `PUT` request.
+    + `activationCode` (string) -- The code the `User` can use to regester their account and set a password
+
+    + Body
+    
+            {
+                "activationCode": "123123123"
+            }
+
++ Response 409 (application/json; charset=utf-8)
+This is returned when the `identifer` specified is already is use.
+
+    + Body
+
++ Request (application/json)
+
+    ##### This request is to simulate the use of an invalid Bearer token.
+
+    + Headers
+
+            Authorization: Bearer INVALID-BEARER-TOKEN
+
+    + Body
+
+            {
+            }
+
++ Response 401 (text/plain; charset=utf-8)
+
++ Request (application/json)
+
+    ##### This request is to simulate the use of an invalid body.
+
+    + Headers
+
+            Authorization: Bearer BEARER-TOKEN-FROM-AUTHN-API
+
+    + Body
+
+            {
+            }
+
++ Response 400 (text/plain; charset=utf-8)
+
+## /Users{?identifier,barcode,orderReference,door,suspended,page}
+
+### SEARCH [GET]
+
+Search for users that match the specified parameters
+
++ Parameters
+
+    + `identifier` (string, optional) -- The 
+    + `barcode` (string, optional)
+    + `orderReference` (string, optional)
+    + `door` (string, optional)
+    + `suspended` (boolean, optional)
+        + Default: `false`
+    + `page` (boolean, optional)
+        + Default: `1`
+
++ Request (application/json)
+
+    + Headers
+
+            Authorization: Bearer BEARER-TOKEN-FROM-AUTHN-API
+
+    + Body
+    
+            {
+                "identifier": "DJ001",
+                "page": 1
+            }
+        
++ Response 200  (application/hal+json)
+
+          {
+              "totalResults": 2,
+              "totalPages": 1,
+              "page": 1,
+              "_links": {
+                "self": {
+                  "href": "http://private-555da-byboxstockonnectapi.apiary-mock.com/Users?identifer=DO001&page=1"
+                },
+                "page": {
+                  "href": "http://private-555da-byboxstockonnectapi.apiary-mock.com/Users{?identifier,barcode,orderReference,door,suspended,page}",
+                  "templated": true
+                },
+                "users": {
+                  "href": "http://private-555da-byboxstockonnectapi.apiary-mock.com/Users{?identifier,barcode,orderReference,door,suspended,page}",
+                  "templated": true
+                },
+                "user": [
+                  {
+                    "href": "http://private-555da-byboxstockonnectapi.apiary-mock.com/Users/DJ001"
+                  },
+                  {
+                    "href": "http://private-555da-byboxstockonnectapi.apiary-mock.com/Users/DJ0011"
+                  }
+                ]
+              },
+              "_embedded": {
+                "user": [
+                  {
+                    "identifier": "DJ001",
+                    "username": "d.f.jones",
+                    "firstName": "Danny",
+                    "lastName": "Jones",
+                    "email": "email@address.com",
+                    "role": "user",
+                    "isSuspended": false,
+                    "_links": {
+                      "self": {
+                        "href": "http://private-555da-byboxstockonnectapi.apiary-mock.com/Users/DJ001/"
+                      }
+                    }
+                  },
+                  {
+                    "identifier": "DJ0011",
+                    "username": "d.x.jones",
+                    "firstName": "David",
+                    "lastName": "Jones",
+                    "email": "email@address.com",
+                    "role": "user",
+                    "isSuspended": false,
+                    "_links": {
+                      "self": {
+                        "href": "http://private-555da-byboxstockonnectapi.apiary-mock.com/Users/DJ0011/"
+                      }
+                    }
+                  },
+                ]
+              }
+          }
+      
+## /Users/{identifier}
+
+### GET [GET]
+
+Gets the single `User` identified by the specified `identifier`
+
++ Parameters
+
+    + `identifier` -- The value used to uniquely identify the `User`
+    
++ Response 200 (application/hal+json; charset=utf-8)
+
+            {
+              "user": {
+                "identifier": "DJ001",
+                "username": "d.f.jones",
+                "firstName": "Danny",
+                "lastName": "Jones",
+                "email": "email@address.com",
+                "role": "user",
+                "isSuspended": false,
+                "_links": {
+                  "self": {
+                    "href": "http://private-555da-byboxstockonnectapi.apiary-mock.com/Users/DJ001/"
+                  }
+                }
+              }
+            }
+
++ Request (application/hal+json)
+
+    ##### This request is to simulate the use of an invalid Bearer token.
+
+    + Headers
+
+            Authorization: Bearer INVALID-BEARER-TOKEN
+
+    + Body
+
+            {
+            }
+
++ Response 401 (text/plain; charset=utf-8)
+
+### UPDATE [PUT]
+
+Updates an existing `User` with the supplied `identifier`. All existing values for the user will be updated with the values supplied in the request
+
++ Request (application/json)
+    
+    ##### The following defines the body specification for the `PUT` request.
+    + `identifier` (string) - The value that uniquely identifies a `User`
+    + `username` (string) -- The `username` associated with the `User`.
+    + `firstName` (string) -- The `firstName` associated with the `User`.
+    + `lastName` (string) -- The `lastName` associated with the `User`.
+    + `email` (string) -- The `email` associated with the `User`.
+    + `role` (enum[string]) - The role the user has
+        + Members
+            + `user`
+            + `admin`
+            + `readonly admin`
+    + `isSuspended` (bool) -- If the user can sign in an perform actions in the system
+     
+    + Headers
+
+            Authorization: Bearer BEARER-TOKEN-FROM-AUTHN-API
+
+    + Body
+
+            {
+                "identifier": "DJ001",
+                "username": "d.f.jones",
+                "firstName": "Danny",
+                "lastName": "Jones",
+                "email": "email@address.com",
+                "role": "admin",
+                "isSuspended": false
+            }
+
++ Response 200 (application/json; charset=utf-8)
+This is returned when the `User` was accepted for update.
+    
+    + Body
+    
++ Response 409 (application/json; charset=utf-8)
+This is returned when the `identifer` specified in the body is already is use.
+   
+    + Body
+    
++ Response 404  (application/json; charset=utf-8)
+This is returned when the `identifier` specified in the uri doesn't match an existing `User` 
+   
+    + Body
+    
++ Request (application/json)
+
+    ##### This request is to simulate the use of an invalid Bearer token.
+
+    + Headers
+
+            Authorization: Bearer INVALID-BEARER-TOKEN
+
+    + Body
+
+            {
+            }
+
++ Response 401 (text/plain; charset=utf-8)
+
++ Request (application/json)
+
+    ##### This request is to simulate the use of an invalid body.
+
+    + Headers
+
+            Authorization: Bearer BEARER-TOKEN-FROM-AUTHN-API
+
+    + Body
+
+            {
+            }
+
++ Response 400 (text/plain; charset=utf-8)
+
+## /Users/{identifier}/Packages
+
+### ASSIGN [POST]
+
+Assigns the collection of a specifed `Package` from a specified `Door`to a particular `User`. In instances where the
+specified `User` does not already have access to `door` then access will be automatically granted and the `User` will receive
+temporary keys for the `Door.` After the `Package` has been collected this temporary access will be revoked.
+
++ parameters
+
+    + `identifier` (string) -- The unique `identifier` that defines the `User` that will collect the `Package`.
+
++ Request (application/json)
+
+    + `barcode` (string) - The `barcode` of the `Package` to assign
+    + `door` (string) -- The `identifier` that defines the `Door` from which the `Package` will be collected.
+    + `preAdvise` (bool) -- If the `Package` is not currently in the door, set the `Package` to the `User` when it arrives in the `Door`
+    
+    + Headers
+
+            Authorization: Bearer BEARER-TOKEN-FROM-AUTHN-API
+
+    + Body
+
+            {
+                "barcode": "ABC12345SBS",
+                "doorId": "DOOR-2",
+                "preAdvise": false
+            }
+
++ Response 200 (application/json; charset=utf-8)
+This status is returned when the request was accepted for processing.
+
+    + Body
+
++ Response 404 (application/json; charset=utf-8)
+This status is returned when the request was structurally valid but the specified `user` or `door` does not exist.
+
+    + Body
+
++ Request (application/json)
+
+    ##### This request is to simulate the use of an invalid Bearer token.
+
+    + Headers
+
+            Authorization: Bearer INVALID-BEARER-TOKEN
+
+    + Body
+
+            {
+            }
+
++ Response 401 (text/plain; charset=utf-8)
+
++ Request (application/json)
+
+    ##### This request is to simulate the use of an invalid body.
+
+    + Headers
+
+            Authorization: Bearer BEARER-TOKEN-FROM-AUTHN-API
+
+    + Body
+
+            {
+            }
+
++ Response 400 (text/plain; charset=utf-8)
+
+### UNASSIGN [DELETE]
+
+Unassigns the collection of a specifed `Package` from a specified `Door`to a particular `User`. If the `User` was previously granted
+temporary access to `Door` then the unassignment process will revoke this access.
+
++ parameters
+
+    + `identifier` (string) -- The unique `identifier` that defines the `User` that will no longer collect the `Package`.
+    
++ Request (application/json)
+
+    + `barcode` (string) - The `barcode` of the `Package` to unassign
+    + `door` (string) -- The `identifier` that defines the `Door` from which the `Package` will be collected.
+    
+    + Headers
+
+            Authorization: Bearer BEARER-TOKEN-FROM-AUTHN-API
+
+    + Body
+
+            {
+                "barcode": "ABC12345SBS",
+                "doorId": "DOOR-2",
+            }
+
++ Response 200 (application/json; charset=utf-8)
+This status is returned when the request was accepted for processing
+
+    + Body
+
++ Response 404 (application/json; charset=utf-8)
+This status is returned when the request was structurally valid but the specified `user` or `door` does not exist.
+
+    + Body
+
++ Request (application/json)
+
+    ##### This request is to simulate the use of an invalid Bearer token.
+
+    + Headers
+
+            Authorization: Bearer INVALID-BEARER-TOKEN
+
+    + Body
+
+            {
+            }
+
++ Response 401 (text/plain; charset=utf-8)
+
++ Request (application/json)
+
+    ##### This request is to simulate the use of an invalid body.
+
+    + Headers
+
+            Authorization: Bearer BEARER-TOKEN-FROM-AUTHN-API
+
+    + Body
+
+            {
+            }
+
++ Response 400 (text/plain; charset=utf-8)
+
+
+# Group Skus
+
+`Skus` are uniquely identified by their `identifier` and must also contain a `description` at the point of creation.
+`Skus` may be added to an `Order` for collection by a `User`.
+
+## /Skus
+
+### CREATE [POST]
+
+Creates a new `Sku` with the supplied `identifier` and `description`.
+
++ Request (application/json)
+
+    ##### The following defines the body specification for the `PUT` request.
+    
+    + identifier (string) - The value that uniqely identifies a `Sku`
+    + `description` (string) -- The `description` associated with the `sku`.
+
+    + Headers
+
+            Authorization: Bearer BEARER-TOKEN-FROM-AUTHN-API
+
+    + Body
+
+            {
+                "identifier": "MBA",
+                "description": "Macbook Air",
+            }
+
++ Response 200 (application/json; charset=utf-8)
+This is returned when the `Sku` was accepted for creation.
+
+    + Body
+
++ Response 409 (application/json; charset=utf-8)
+This is returned when the `identifer` specified is already is use.
+
+    + Body
+
++ Request (application/json)
+
+    ##### This request is to simulate the use of an invalid Bearer token.
+
+    + Headers
+
+            Authorization: Bearer INVALID-BEARER-TOKEN
+
+    + Body
+
+            {
+            }
+
++ Response 401 (text/plain; charset=utf-8)
+
++ Request (application/json)
+
+    ##### This request is to simulate the use of an invalid body.
+
+    + Headers
+
+            Authorization: Bearer BEARER-TOKEN-FROM-AUTHN-API
+
+    + Body
+
+            {
+            }
+
++ Response 400 (text/plain; charset=utf-8)
+
+## /Skus{?identifier,door,barcode,suspended,page}
+
+### SEARCH [GET]
+
+Searches for Skus matching the specified parameters
+
++ Parameters
+    + identifier (string, optional) -- The value that uniquely identifies a `Sku`
+    + door (string, optional) -- The value that uniquely identifies a `Door`
+    + barcode (string, optional) -- The barcode of a package that has been assigned a sku
+    + suspended (boolean, optional) -- If the sku is suspended or not
+        + Default: `false`
+    + page (boolean, optional) -- The page of results to return
+        + Default: `1`
+
++ Request (application/json)
+
+    + Headers
+
+            Authorization: Bearer BEARER-TOKEN-FROM-AUTHN-API
+
+    + Body
+
+            {
+                "identifier": "MBA",
+                "page": 1
+            }
+
++ Response 200 (application/json; charset=utf-8)
+
+    + Body
+    
+            {
+              "totalResults": 2,
+              "totalPages": 1,
+              "page": 1,
+              "_links": {
+                "self": {
+                  "href": "http://private-555da-byboxstockonnectapi.apiary-mock.com/Skus?identifer=MBA&page=1"
+                },
+                "page": {
+                  "href": "http://private-555da-byboxstockonnectapi.apiary-mock.com/Skus{?identifier,door,barcode,suspended,page}",
+                  "templated": true
+                },
+                "skus": {
+                  "href": "http://private-555da-byboxstockonnectapi.apiary-mock.com/Users{?identifier,door,barcode,suspended,page}",
+                  "templated": true
+                },
+                "sku": [
+                  {
+                    "href": "http://private-555da-byboxstockonnectapi.apiary-mock.com/Skus/MBA"
+                  },
+                  {
+                    "href": "http://private-555da-byboxstockonnectapi.apiary-mock.com/Skus/MBA2016"
+                  }
+                ]
+              },
+              "_embedded": {
+                "sku": [
+                  {
+                    "identifier": "MBA",
+                    "description": "Macbook Air",
+                    "packages": [
+                        {
+                            "Door": "D001",
+                            "Barcode": "12345ABS"
+                        }
+                    ],
+                    "isSuspended": false,
+                    "_links": {
+                      "self": {
+                        "href": "http://private-555da-byboxstockonnectapi.apiary-mock.com/Users/MBA/"
+                      }
+                    }
+                  },
+                  {
+                    "identifier": "MBA216",
+                    "description": "Macbook Air 2016",
+                    "packages": [
+                        {
+                            "Door": "D002",
+                            "Barcode": "2828282"
+                        }
+                    ],
+                    "isSuspended": false,
+                    "_links": {
+                      "self": {
+                        "href": "http://private-555da-byboxstockonnectapi.apiary-mock.com/Skus/MBA2016/"
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+      
+## /Skus/{identifier}
+
+### GET [GET]
+
+Returns the `Sku` that has the specified `identifier`.
+
++ Parameters
+    + identifier (string) - The `identifier` of the `Sku` to return
+    
++ Request (application/json)
+
+    + Headers
+
+            Authorization: Bearer BEARER-TOKEN-FROM-AUTHN-API
+
+    + Body
+    
+            {
+            }
+
++ Response 200 (application/json; charset=utf-8)
+
+    + Body
+    
+            {
+                "identifier": "MBA",
+                "description": "Macbook Air",
+                "packages": [
+                   {
+                     "Door": "D001",
+                     "Barcode": "12345ABS"
+                    }
+                ],
+                "isSuspended": false,
+                "_links": {
+                    "self": {
+                    "href": "http://private-555da-byboxstockonnectapi.apiary-mock.com/Users/MBA/"
+                }
+            }
+            
+### UPDATE [PUT]
+
+Updates an existing sku `Sku` with the supplied `identifier`.
+
++ Parameters
+
+    + `identifier` (string) -- The value that uniquely identifies a `Sku`
+    
++ Request (application/json)
+
+    + `identifier` (string) - The value that uniqely identifies a `Sku`
+    + `description` (string) -- The `description` associated with the `sku`.
+
+    + Headers
+
+            Authorization: Bearer BEARER-TOKEN-FROM-AUTHN-API
+
+    + Body
+
+            {
+                "identifier": "MBA",
+                "description": "Macbook Air",
+            }
+
++ Response 200 (application/json; charset=utf-8)
+This is returned when the `Sku` was accepted for update.
+
+    + Body
+    
++ Response 404 (application/json; charset=utf-8)
+This is returned when the  `identifer` specified does not exist.
+
+    + Body
+
++ Response 409 (application/json; charset=utf-8)
+This is returned when the new `identifer` specified is already is use.
+
+    + Body
+
++ Request (application/json)
+
+    ##### This request is to simulate the use of an invalid Bearer token.
+
+    + Headers
+
+            Authorization: Bearer INVALID-BEARER-TOKEN
+
+    + Body
+
+            {
+            }
+
++ Response 401 (text/plain; charset=utf-8)
+
++ Request (application/json)
+
+    ##### This request is to simulate the use of an invalid body.
+
+    + Headers
+
+            Authorization: Bearer BEARER-TOKEN-FROM-AUTHN-API
+
+    + Body
+
+            {
+            }
+
++ Response 400 (text/plain; charset=utf-8)
+
+## /Skus/{identifier}/Packages
+
+### ASSIGN [POST]
+
+Assigns the specifed `Sku` to a `Package` in a particular `Door`.
+
++ Parameters
+    + identifier (string) - The `identifier` of the `Sku` to assign
+
++ Request (application/json)
+
+    ##### The following defines the body specification for the `Assign` `POST` request.
+    + `door` (string) -- The `identifier` of the `Door` that contains the `Package` to assign to the `Sku`.
+    + `barcode` (string) -- The barcode of the `Package` to assign to the `Sku`.
+    + `preAdvise` (bool) -- If the `Package` is not currently in the door, set the `Package` to the `Sku` when it arrives in the `Door`
+    
+    + Headers
+
+            Authorization: Bearer BEARER-TOKEN-FROM-AUTHN-API
+
+    + Body
+
+            {
+                "doorId": "DOOR-1",
+                "barcode": "ABC1234ABS"
+            }
+
++ Response 200 (application/json; charset=utf-8)
+This status is returned when the `Assign` request was accepted for processing.
+
+    + Body
+
++ Response 404 (application/json; charset=utf-8)
+This status is returned when the `Assign` request was structurally valid but the specified `doorId` or `barcode` does not exist.
+
+    + Body
+
++ Request (application/json)
+
+    ##### This request is to simulate the use of an invalid Bearer token.
+
+    + Headers
+
+            Authorization: Bearer INVALID-BEARER-TOKEN
+
+    + Body
+
+            {
+            }
+
++ Response 401 (text/plain; charset=utf-8)
+
++ Request (application/json)
+
+    ##### This request is to simulate the use of an invalid body.
+
+    + Headers
+
+            Authorization: Bearer BEARER-TOKEN-FROM-AUTHN-API
+
+    + Body
+
+            {
+            }
+
++ Response 400 (text/plain; charset=utf-8)
+
+### UNASSIGN [DELETE]
+
+Unassigns the specifed `Sku` from a specified `Package` in the specified `Door`
+
++ Parameters
+    + identifier (string) - The `identifier` of the `Sku` to unassign
+
++ Request (application/json)
+
+    ##### The following defines the body specification for the `Unassign` `POST` request.
+    + `door` (string) -- The `identifier` of the `Door`that contains the assigned package.
+    + `barcode` (string) -- The barcode of the `Package` to be unassigned
+
+    + Headers
+
+            Authorization: Bearer BEARER-TOKEN-FROM-AUTHN-API
+
+    + Body
+
+            {
+                "door": "DOOR-1",
+                "barcode": "ABC12345ANS"
+            }
+
++ Response 200 (application/json; charset=utf-8)
+This status is returned when the `Unassign` request was accepted for processing.
+
+    + Body
+
++ Response 404 (application/json; charset=utf-8)
+This status is returned when the `Unassign` request was structurally valid but the specified `doorId` or `barcode` does not exist.
+
+    + Body
+
++ Request (application/json)
+
+    ##### This request is to simulate the use of an invalid Bearer token.
+
+    + Headers
+
+            Authorization: Bearer INVALID-BEARER-TOKEN
+
+    + Body
+
+            {
+            }
+
++ Response 401 (text/plain; charset=utf-8)
+
++ Request (application/json)
+
+    ##### This request is to simulate the use of an invalid body.
+
+    + Headers
+
+            Authorization: Bearer BEARER-TOKEN-FROM-AUTHN-API
+
+    + Body
+
+            {
+            }
+
++ Response 400 (text/plain; charset=utf-8)
+
+# Group Orders
+
+`Orders` can be thought of as a grouping of `Skus` and\or `Packages` to be collected. The `Order` is "complete" when all `Skus` and `Packages` on the `Order`
+have been completed.
+
+## /Orders
+
+### CREATE [POST]
+
+Creates a new `Order` with the supplied `orderReference`.
+
++ Request (application/json)
+
+    + `orderReference` (string) - The unique identifier of this `Order`
+    + `skus` (array[object], optional) -- A list of `items` by `sku` for creating the intial `Order`.
+        + `sku` (string) -- The `identifier` of the `sku` to be collected.
+        + `door` (string) -- The `identifier` of the `door` to collect from
+        + `quantity` (number) -- The numeric quantity of `sku` item.
+    + `packages` (array[object], optional) -- A list of `packages` by `barcode` for creating the intial `Order`.
+        + `barcode` (string) -- The `barcide` of the `package` to be collected.
+        + `door` (string) -- The `identifier` of the `door` to collect from
+        
+    + Headers
+
+            Authorization: Bearer BEARER-TOKEN-FROM-AUTHN-API
+
+    + Body
+
+            {
+                "skus": [
+                    {
+                        "sku": "SK123123123",
+                        "door": "DN1",
+                        "quantity": 2
+                    }
+                ],
+                "packages": [
+                   {
+                        "barcode": "ABC12345ASN",
+                        "door": "DN2"
+                   }
+                ]
+            }
+
++ Response 200 (application/json; charset=utf-8)
+This is returned when the `Order` was accepted for creation.
+
+    + Body
+
++ Response 409 (application/json; charset=utf-8)
+This is returned when the `orderReference` specified is already is use.
+
+    + Body
+    
+## /Orders{?orderReference,user,sku,door,cancelled,page}
+
+### SEARCH [GET]
+
+Returns all `Orders` that contain the specified parameters
+
++ Parameters
+    + orderReference (string, optional) - The `Order` number
+    + user (string, optional) -- The `User` the `Order` is assigned to
+    + sku (string, optional) -- The `Sku` the `Order` contains
+    + door (string, optional) -- The `Door` the `Order` has items in
+    + cancelled (boolean, optional) -- If the `Order` is cancelled or not
+        + Default: `false`
+    + page (boolean, optional) -- The page of results to return
+        + Default: `1`
+    
++ Request (application/json)
+
+    + Headers
+
+            Authorization: Bearer BEARER-TOKEN-FROM-AUTHN-API
+
+    + Body
+
+            {
+                "orderReference": "ORDEREF",
+                "page": 1
+            }
+
++ Response 200 (application/json; charset=utf-8)
+
+    + Body
+    
+            {
+              "totalResults": 2,
+              "totalPages": 1,
+              "page": 1,
+              "_links": {
+                "self": {
+                  "href": "http://private-555da-byboxstockonnectapi.apiary-mock.com/Orders?orderReference=ORDERREF&page=1"
+                },
+                "page": {
+                  "href": "http://private-555da-byboxstockonnectapi.apiary-mock.com/Orders{?orderReference,user,sku,door,cancelled,page}",
+                  "templated": true
+                },
+                "orders": {
+                  "href": "http://private-555da-byboxstockonnectapi.apiary-mock.com/Orders{?orderReference,user,sku,door,cancelled,page}",
+                  "templated": true
+                },
+                "order": [
+                  {
+                    "href": "http://private-555da-byboxstockonnectapi.apiary-mock.com/Orders/ORDERREF1"
+                  },
+                  {
+                    "href": "http://private-555da-byboxstockonnectapi.apiary-mock.com/Orders/ORDERREF2"
+                  }
+                ]
+              },
+              "_embedded": {
+                "order": [
+                  {
+                        "orderReference": "ORDERREF1",
+                        "user": "DJ001",
+                        "isCancelled": false,
+                        "skus": [
+                            {
+                                "sku": "SK123123123",
+                                "door": "DN1",
+                                "quantity": 2
+                            }
+                        ],
+                        "packages": [
+                           {
+                                "barcode": "ABC12345ASN",
+                                "door": "DN2"
+                           }
+                        ],
+                        "_links": {
+                              "self": {
+                                "href": "http://private-555da-byboxstockonnectapi.apiary-mock.com/Orders/ORDERREF1/"
+                              }
+                            }
+                  },
+                  {
+                    "orderReference": "ORDERREF2",
+                        "user": "DJ001",
+                        "isCancelled": false,
+                        "skus": [
+                            {
+                                "sku": "SK123123123",
+                                "door": "DN1",
+                                "quantity": 2
+                            }
+                        ],
+                        "packages": [
+                           {
+                                "barcode": "ABC12345ASN",
+                                "door": "DN2"
+                           }
+                        ],
+                        "_links": {
+                              "self": {
+                                "href": "http://private-555da-byboxstockonnectapi.apiary-mock.com/Orders/ORDERREF2/"
+                              }
+                            }
+                  }
+                ]
+              }
+            }
+            
+## /Orders/{orderReference}/User
+
+### ASSIGN [POST]
+
+Assigns the `Order` specified by `orderReference` to the `User`. In instances where the
+specified `User` does not already have access to every `door` required to complete the `Order` then access will be automatically granted and the `User` will receive
+temporary keys for the `Door.` After each `Sku` and `Package` has been collected this temporary access will be revoked.
+
++ Parameters
+    + orderReference (string) - The `Order` number
+
++ Request (application/json)
+
+    ##### The following defines the body specification for the `Assign` `POST` request.
+    + `user` (string) -- the `identifier` that defines the `User` to which the `Order` will be assigned.
+
+    + Headers
+
+            Authorization: Bearer BEARER-TOKEN-FROM-AUTHN-API
+
+    + Body
+
+            {
+                "user": "DJ001"
+            }
+
++ Response 200 (application/json; charset=utf-8)
+This is returned when the `Assign` request was accepted for processing.
+
+    + Body
+
++ Response 404 (application/json; charset=utf-8)
+This is returned when the `Assign` request was structurally valid but the specified `orderReference` or `user` does not exist.
+
+    + Body
+
++ Request (application/json)
+
+    ##### This request is to simulate the use of an invalid Bearer token.
+
+    + Headers
+
+            Authorization: Bearer INVALID-BEARER-TOKEN
+
+    + Body
+
+            {
+            }
+
++ Response 401 (text/plain; charset=utf-8)
+
++ Request (application/json)
+
+    ##### This request is to simulate the use of an invalid body.
+
+    + Headers
+
+            Authorization: Bearer BEARER-TOKEN-FROM-AUTHN-API
+
+    + Body
+
+            {
+            }
+
++ Response 400 (text/plain; charset=utf-8)
+
+### UNASSIGN [DELETE]
+
+Unassign an `Order` from the specified `User`. If the `User` was previously granted
+temporary access to any `doors` then the unassignment process will revoke this access.
+
+
++ Parameters
+    + orderReference (string) - The `Order` reference
+
++ Request (application/json)
+
+    ##### The following defines the body specification for the `Unassign` `POST` request.
+    + `user` (string) -- The `identifier` that defines the `User` from which the `Order` will be unassigned.
+
+    + Headers
+
+            Authorization: Bearer BEARER-TOKEN-FROM-AUTHN-API
+
+    + Body
+
+            {
+                "user": "DJ001"
+            }
+
++ Response 200 (application/json; charset=utf-8)
+This is returned when the `Unassign` request was accepted for processing.
+
+    + Body
+
++ Response 404 (application/json; charset=utf-8)
+This is returned when the `Unassign` request was structurally valid but the specified `orderReference` or `user` does not exist.
+
+    + Body
+
++ Response 409 (application/json; charset=utf-8)
+This is returned when the `Order` is not currently assigned to a user.
+
+    + Body
+
++ Request (application/json)
+
+    ##### This request is to simulate the use of an invalid Bearer token.
+
+    + Headers
+
+            Authorization: Bearer INVALID-BEARER-TOKEN
+
+    + Body
+
+            {
+            }
+
++ Response 401 (text/plain; charset=utf-8)
+
++ Request (application/json)
+
+    ##### This request is to simulate the use of an invalid body.
+
+    + Headers
+
+            Authorization: Bearer BEARER-TOKEN-FROM-AUTHN-API
+
+    + Body
+
+            {
+            }
+
++ Response 400 (text/plain; charset=utf-8)
+
+## /Orders/{orderReference}/Skus
+
+### ASSIGN [POST]
+
+Adds skus to the specified `Order`. In instances where the `Order` has already been assigned and the
+specified `User` does not already have access to every `door` required to collect the specfied `items` then access will be automatically granted and the `User` will receive
+temporary keys for the required doors.
+
++ Parameters
+    + orderReference (string) - The `Order` reference
+
++ Request (application/json)
+
+    ##### The following defines the body specification for the `AddSku` `POST` request.
+    + `skus` (array[object], optional) -- A list of `items` by `sku` for creating the intial `Order`.
+        + `sku` (string) -- The `identifier` of the `sku` to be collected.
+        + `door` (string) -- The `identifier` of the `door` to collect from
+        + `quantity` (number) -- The numeric quantity of `sku` item.
+
+    + Headers
+
+            Authorization: Bearer BEARER-TOKEN-FROM-AUTHN-API
+
+    + Body
+
+            {
+                "skus": [
+                    {
+                        "sku": "SK321321321",
+                        "quantity": 2,
+                        "door": "DOOR-1"
+                    }
+                ]
+            }
+
++ Response 200 (application/json; charset=utf-8)
+This is returned when the `AddSkus` request was accepted for processing.
+
+    + Body
+
++ Response 404 (application/json; charset=utf-8)
+This is returned when the `AddSkus` request is structurally valid but the `orderReference` does not exist.
+
+    + Body
+
++ Request (application/json)
+
+    ##### This request is to simulate the use of an invalid Bearer token.
+
+    + Headers
+
+            Authorization: Bearer INVALID-BEARER-TOKEN
+
+    + Body
+
+            {
+            }
+
++ Response 401 (text/plain; charset=utf-8)
+
++ Request (application/json)
+
+    ##### This request is to simulate the use of an invalid body.
+
+    + Headers
+
+            Authorization: Bearer BEARER-TOKEN-FROM-AUTHN-API
+
+    + Body
+
+            {
+            }
+
++ Response 400 (text/plain; charset=utf-8)
+
+### UNASSIGN [DELETE]
+
+Remove skus from the specified `Order`. In instances where the `Order` has already been assigned and the
+specified `User` has already been granted temporary access to every `door` required to collect the specified `skus`
+then the temporary access will be revoked.
+
++ Parameters
+    + orderReference (string) - The `Order` number
+
++ Request (application/json)
+
+    ##### The following defines the body specification for the `RemoveSkus` `POST` request.
+     + `skus` (array[object], optional) -- A list of `skus` to remove from the `Order`.
+        + `sku` (string) -- The `identifier` of the `sku` to be removed.
+        + `door` (string) -- The `identifier` of the `door` to remove from.
+        + `quantity` (number) -- The numeric quantity of `sku` items to remove.
+
+    + Headers
+
+            Authorization: Bearer BEARER-TOKEN-FROM-AUTHN-API
+
+    + Body
+
+            {
+                "skus": [
+                    {
+                        "sku": "SK321321321",
+                        "door": "DOOR-1",
+                        "quantity": 2
+                    }
+                ]
+            }
+
++ Response 200 (application/json; charset=utf-8)
+This is returned when the `RemoveSkus` request was accepted for processing.
+
+    + Body
+
++ Response 404 (application/json; charset=utf-8)
+This is returned when the `RemoveSkus` request is structurally valid but the `orderReference` does not exist.
+
+    + Body
+
++ Request (application/json)
+
+    ##### This request is to simulate the use of an invalid Bearer token.
+
+    + Headers
+
+            Authorization: Bearer INVALID-BEARER-TOKEN
+
+    + Body
+
+            {
+            }
+
++ Response 401 (text/plain; charset=utf-8)
+
++ Request (application/json)
+
+    ##### This request is to simulate the use of an invalid body.
+
+    + Headers
+
+            Authorization: Bearer BEARER-TOKEN-FROM-AUTHN-API
+
+    + Body
+
+            {
+            }
+
++ Response 400 (text/plain; charset=utf-8)
+
+## /Orders/{orderReference}/Packages
+
+### ASSIGN [POST]
+
+Adds package to the specified `Order`. In instances where the `Order` has already been assigned and the
+specified `User` does not already have access to every `door` required to collect the specfied `packages` then access will be automatically granted and the `User` will receive
+temporary keys for the required doors.
+
++ Parameters
+    + orderReference (string) - The `Order` reference
+
++ Request (application/json)
+
+    ##### The following defines the body specification for the `AddPackages` `POST` request.
+    + `packages` (array[object], optional) -- A list of `packages` by `barcode` to add to the `Order`.
+        + `barcode` (string) -- The `barcode` of the `package` to be collected.
+        + `door` (string) -- The `identifier` of the `door` to collect from
+
+    + Headers
+
+            Authorization: Bearer BEARER-TOKEN-FROM-AUTHN-API
+
+    + Body
+
+            {
+                "packages": [
+                    {
+                        "barcode": "SK321321321",
+                        "door": "DOOR-1"
+                    }
+                ]
+            }
+
++ Response 200 (application/json; charset=utf-8)
+This is returned when the `AddPackages` request was accepted for processing.
+
+    + Body
+
++ Response 404 (application/json; charset=utf-8)
+This is returned when the `AddPackages` request is structurally valid but the `orderReference` does not exist.
+
+    + Body
+
++ Request (application/json)
+
+    ##### This request is to simulate the use of an invalid Bearer token.
+
+    + Headers
+
+            Authorization: Bearer INVALID-BEARER-TOKEN
+
+    + Body
+
+            {
+            }
+
++ Response 401 (text/plain; charset=utf-8)
+
++ Request (application/json)
+
+    ##### This request is to simulate the use of an invalid body.
+
+    + Headers
+
+            Authorization: Bearer BEARER-TOKEN-FROM-AUTHN-API
+
+    + Body
+
+            {
+            }
+
++ Response 400 (text/plain; charset=utf-8)
+
+### UNASSIGN [DELETE]
+
+Remove packages from the specified `Order`. In instances where the `Order` has already been assigned and the
+specified `User` has already been granted temporary access to every `door` required to collect the specified `packages`
+then the temporary access will be revoked.
+
++ Parameters
+    + orderReference (string) - The `Order` reference
+
++ Request (application/json)
+
+    ##### The following defines the body specification for the `RemovePackages` `POST` request.
+   + `packages` (array[object], optional) -- A list of `packages` by `barcode` to add to the `Order`.
+        + `barcode` (string) -- The `barcode` of the `package` to be collected.
+        + `door` (string) -- The `identifier` of the `door` to collect from
+
+    + Headers
+
+            Authorization: Bearer BEARER-TOKEN-FROM-AUTHN-API
+
+    + Body
+
+            {
+                "packages": [
+                    {
+                        "barcode": "SK321321321",
+                        "door": "DOOR-1"
+                    }
+                ]
+            }
+
++ Response 200 (application/json; charset=utf-8)
+This is returned when the `RemovePackages` request was accepted for processing.
+
+    + Body
+
++ Response 404 (application/json; charset=utf-8)
+This is returned when the `RemovePackages` request is structurally valid but the `orderReference` does not exist.
+
+    + Body
+
++ Request (application/json)
+
+    ##### This request is to simulate the use of an invalid Bearer token.
+
+    + Headers
+
+            Authorization: Bearer INVALID-BEARER-TOKEN
+
+    + Body
+
+            {
+            }
+
++ Response 401 (text/plain; charset=utf-8)
+
++ Request (application/json)
+
+    ##### This request is to simulate the use of an invalid body.
+
+    + Headers
+
+            Authorization: Bearer BEARER-TOKEN-FROM-AUTHN-API
+
+    + Body
+
+            {
+            }
+
++ Response 400 (text/plain; charset=utf-8)
+
+## /Orders/{orderReference}
+
+### GET [GET]
+
+Returns the details of the order matching the supplied `orderReference`
+
++ Parameters
+    + orderReference (string) - The `Order` reference
+    
++ Request (application/json)
+     + Headers
+
+            Authorization: Bearer BEARER-TOKEN-FROM-AUTHN-API
+
+    + Body
+
+            {
+            } 
+            
++ Response 200 (application/hal; charset=utf-8)
+
+    + Body
+
+            {
+                "orderReference": "Order123",
+                "user": "DJ001",
+                "isCancelled": false,
+                "skus": [
+                    {
+                        "sku": "SK123123123",
+                        "door": "DN1",
+                        "quantity": 2
+                    }
+                ],
+                "packages": [
+                   {
+                        "barcode": "ABC12345ASN",
+                        "door": "DN2"
+                   }
+                ],
+                "_links": {
+                      "self": {
+                        "href": "http://private-555da-byboxstockonnectapi.apiary-mock.com/Orders/Order123/"
+                      }
+                    }
+            }
+            
+### UPDATE [PUT]
+
+Change the `Order` specified by `orderReference` to have the newly supplied reference number `newReParameters
+    + orderReference (string) - The `Order` reference
+
++ Request (application/json)
+
+     + `orderReference` (string) -- A new reference number
+     + `isCancelled` (boolean) -- If the order is cancelled or not
+
+    + Headers
+
+            Authorization: Bearer BEARER-TOKEN-FROM-AUTHN-API
+
+
+    + Body
+
+            {
+                "orderReference": "NEWORDERREFERENCE1"
+            }
+
+
++ Response 200 (application/json; charset=utf-8)
+This is returned when the request was accepted for processing.
+
+    + Body
+
++ Response 404 (application/json; charset=utf-8)
+This is returned when the `Order` specified by `orderReference` does not exist.
+
+    + Body
+
++ Response 409 (application/json; charset=utf-8)
+This is returned when the new `orderReference` specified is already is use.
+
+    + Body
+
++ Request (application/json)
+
+    ##### This request is to simulate the use of an invalid Bearer token.
+
+    + Headers
+
+            Authorization: Bearer INVALID-BEARER-TOKEN
+
+    + Body
+
+            {
+            }
+
++ Response 401 (text/plain; charset=utf-8)
+
++ Request (application/json)
+
+    ##### This request is to simulate the use of an invalid body.
+
+    + Headers
+
+            Authorization: Bearer BEARER-TOKEN-FROM-AUTHN-API
+
+    + Body
+
+            {
+            }
+
++ Response 400 (text/plain; charset=utf-8)
+
+# Group Packages
+
+`Packages` are uniquely identified by their `barcode` and may go through various stages in their lifecyle, they may be delivered, collected, or returned.
+`Packages` may be directly assigned to a `User` or added to an `Order` to be collected. A `Package` may also be associated with a `Sku`.
+
+## /Packages{?door,page,pageSize}
+
+### SEARCH [GET]
+
+Returns a paged snapshot of all packages and their associated data. Results are sorted so that
+packages with the most recent activity are returned first.
+
+Since this endpoint supports [Hypermedia](https://en.wikipedia.org/wiki/Hypermedia) and returns `application/hal+json` it is
+simple to navigate programmatically through all pages to obtain a complete snapshot using the `_links` element.
+
++ Parameters
+    + door (string, optional) - Filter by the door identifier
+    + page (number, optional) - The page of results to return.
+        + Default: `1`
+    + pageSize (number, optional) - The number of results to return per page. This may be subject to an upper limit but will be reflected in the `pageSize` value returned in the response body.
+        + Default: `50`
+
++ Request (application/hal+json; charset=utf-8)
+
+    + Headers
+
+            Authorization: Bearer BEARER-TOKEN-FROM-AUTHN-API
+
++ Response 200 (application/hal+json; charset=utf-8)
+
+            {
+              "totalResults": 100,
+              "totalPages": 4,
+              "page": 1,
+              "pageSize": 25,
+              "_links": {
+                "self": {
+                  "href": "http://private-555da-byboxstockonnectapi.apiary-mock.com/Packages?door=DOOR&page=2&pageSize=25"
+                },
+                "prev": {
+                  "href": "http://private-555da-byboxstockonnectapi.apiary-mock.com/Packages?door=DOOR&page=1&pageSize=25"
+                },
+                "next": {
+                  "href": "http://private-555da-byboxstockonnectapi.apiary-mock.com/Packages?door=DOOR&page=3&pageSize=25"
+                },
+                "page": {
+                  "href": "http://private-555da-byboxstockonnectapi.apiary-mock.com/Packages{?door,page,pageSize}",
+                  "templated": true
+                },
+                "packages": [
+                  {
+                    "href": "http://private-555da-byboxstockonnectapi.apiary-mock.com/Packages/DOOR-1/201602180908080694086"
+                  },
+                  {
+                    "href": "http://private-555da-byboxstockonnectapi.apiary-mock.com/Packages/DOOR-1/201602180908080694194"
+                  }
+                ]
+              },
+              "_embedded": {
+                "packages": [
+                  {
+                    "barcode": "201602180908080694086",
+                    "location": {
+                      "id": "LOC-1",
+                      "name": "Coventry"
+                    },
+                    "door": {
+                      "id": "DOOR-1",
+                      "name": "Door 1"
+                    },
+                    "doorProfile": {
+                      "id": 1,
+                      "name": "Delivery"
+                    },
+                    "at": "2016-02-18T09:08:08.0694086+00:00",
+                    "by": {
+                      "id": "mw1",
+                      "name": "Mark Woodhall"
+                    },
+                    "_links": {
+                      "self": {
+                        "href": "http://private-555da-byboxstockonnectapi.apiary-mock.com/Packages/DOOR-1/201602180908080694086"
+                      }
+                    }
+                  },
+                  {
+                    "barcode": "201602180908080694194",
+                    "location": {
+                      "id": "COVENTRY",
+                      "name": "Coventry"
+                    },
+                    "door": {
+                      "id": "DOOR-2",
+                      "name": "Door 2"
+                    },
+                    "doorProfile": {
+                      "id": 1,
+                      "name": "Delivery"
+                    },
+                    "at": "2016-02-18T09:08:08.0694086+00:00",
+                    "by": {
+                      "id": "mark.woodhall,
+                      "name": "Mark Woodhall"
+                    },
+                    "_links": {
+                      "self": {
+                        "href": "http://private-555da-byboxstockonnectapi.apiary-mock.com/Packages/DOOR-1/201602180908080694194"
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+
++ Request (application/hal+json)
+
+    ##### This request is to simulate the use of an invalid Bearer token.
+
+    + Headers
+
+            Authorization: Bearer INVALID-BEARER-TOKEN
+
+    + Body
+
+            {
+            }
+
++ Response 401 (text/plain; charset=utf-8)
+
+## /Packages{?door,barcode}
+
+### GET [GET]
+
+Returns the `Package` identified by the specified `barcode` and `door` identifier.
+
++ Parameters
+    + door (string) - The identifier of the `door` that the `Package` is currently in
+    + barcode (string) - The `barcode` of the `Package` to return.
+
++ Request (application/hal+json; charset=utf-8)
+
+    + Headers
+
+            Authorization: Bearer BEARER-TOKEN-FROM-AUTHN-API
+
++ Response 200 (application/hal+json; charset=utf-8)
+
+            {
+              "package": {
+                "barcode": "201602180908080694086",
+                "location": {
+                  "id": "COVENTRY",
+                  "name": "Coventry"
+                },
+                "door": {
+                  "id": "DOOR-1",
+                  "name": "Door 1"
+                },
+                "doorProfile": {
+                  "id": 1,
+                  "name": "Return"
+                },
+                "at": "2016-02-18T09:08:08.0694086+00:00",
+                "by": {
+                  "id": "mark.woodhall",
+                  "name": "Mark Woodhall"
+                },
+                "_links": {
+                  "self": {
+                    "href": "http://private-555da-byboxstockonnectapi.apiary-mock.com/Packages/DOOR-1/201602180908080694086"
+                  }
+                }
+              }
+            }
+
++ Request (application/hal+json)
+
+    ##### This request is to simulate the use of an invalid Bearer token.
+
+    + Headers
+
+            Authorization: Bearer INVALID-BEARER-TOKEN
+
+    + Body
+
+            {
+            }
+
++ Response 401 (text/plain; charset=utf-8)
+
+# Group Activity
+
+`Activity` generally represents a visit to a `Door` by a `User` and comprises of `unlocked`, `scannedIn`, `scannedOut`, and `locked` events.
+The activity also contains `notScannedOut` `barcodes`, these are items that a `User` should have scanned out but could not or would not.
+
+## /Activity{?page,pageSize}
+
+### GET [GET]
+
+Returns a paged snapshot of all activity. Results are sorted so that most recent activity is returned first.
+
+Since this endpoint supports [Hypermedia](https://en.wikipedia.org/wiki/Hypermedia) and returns `application/hal+json` it is
+simple to navigate programmatically through all pages to obtain a complete snapshot using the `_links` element.
+
++ Parameters
+    + page (number, optional) - The page of results to return.
+        + Default: `1`
+    + pageSize (number, optional) - The number of results to return per page. This may be subject to an upper limit but will be reflected in the `pageSize` value returned in the response body.
+        + Default: `50`
+
++ Request (application/hal+json; charset=utf-8)
+
+    + Headers
+
+            Authorization: Bearer BEARER-TOKEN-FROM-AUTHN-API
+
++ Response 200 (application/hal+json; charset=utf-8)
+
+            {
+              "totalResults": 100,
+              "totalPages": 4,
+              "page": 1,
+              "pageSize": 25,
+              "_links": {
+                "self": {
+                  "href": "http://private-555da-byboxstockonnectapi.apiary-mock.com/Activity?page=2&pageSize=25"
+                },
+                "prev": {
+                  "href": "http://private-555da-byboxstockonnectapi.apiary-mock.com/Activity?page=1&pageSize=25"
+                },
+                "next": {
+                  "href": "http://private-555da-byboxstockonnectapi.apiary-mock.com/Activity?page=3&pageSize=25"
+                },
+                "page": {
+                  "href": "http://private-555da-byboxstockonnectapi.apiary-mock.com/Activity{?page,pageSize}",
+                  "templated": true
+                },
+                "activities": [
+                  {
+                    "href": "http://private-555da-byboxstockonnectapi.apiary-mock.com/Activity/201602180908080694086"
+                  },
+                  {
+                    "href": "http://private-555da-byboxstockonnectapi.apiary-mock.com/Activity/201602180815080684079"
+                  }
+                ]
+              },
+              "_embedded": {
+                "activity": [
+                  {
+                    "id": "201602180908080694086",
+                    "location": {
+                      "id": "COVENTRY",
+                      "name": "Coventry"
+                    },
+                    "door": {
+                      "id": "DOOR-1",
+                      "name": "Door 1"
+                    },
+                    "doorProfile": {
+                      "id": 1,
+                      "name": "Return"
+                    },
+                    "scannedIn": [
+                      "363003",
+                      "612084",
+                      "635673",
+                      "759074",
+                      "298681",
+                      "581501",
+                      "492596"
+                    ],
+                    "scannedOut": [
+                      "784353",
+                      "584084",
+                      "557613",
+                      "873799"
+                    ],
+                    "at": "2016-02-18T09:08:08.0694086+00:00",
+                    "by": {
+                      "id": "mark.woodhall",
+                      "name": "Mark Woodhall",
+                      "group": {
+                        "id": "BYBOX",
+                        "name": "ByBox"
+                      }
+                    },
+                    "carrier": null,
+                    "_links": {
+                      "self": {
+                        "href": "http://private-555da-byboxstockonnectapi.apiary-mock.com/Activity/201602180908080694086"
+                      }
+                    }
+                  },
+                  {
+                    "id": "201602180815080684079",
+                    "location": {
+                      "id": "COVENTRY",
+                      "name": "Coventry"
+                    },
+                    "door": {
+                      "id": "DOOR-1",
+                      "name": "Door 1"
+                    },
+                    "doorProfile": {
+                      "id": 1,
+                      "name": "Return"
+                    },
+                    "scannedIn": [
+                      "114292",
+                      "123460",
+                      "692850",
+                      "621688"
+                    ],
+                    "scannedOut": [
+                      "393996",
+                      "198807",
+                      "107977",
+                      "586586"
+                    ],
+                    "at": "2016-02-18T08:15:08.0684079+00:00",
+                    "by": {
+                      "id": "mark.woodhall",
+                      "name": "Mark Woodhall",
+                      "group": {
+                        "id": "BYBOX",
+                        "name": "ByBox"
+                      }
+                    },
+                    "carrier": null,
+                    "_links": {
+                      "self": {
+                        "href": "http://private-555da-byboxstockonnectapi.apiary-mock.com/Activity/201602180815080684079"
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+
++ Request (application/hal+json)
+
+    ##### This request is to simulate the use of an invalid Bearer token.
+
+    + Headers
+
+            Authorization: Bearer INVALID-BEARER-TOKEN
+
+    + Body
+
+            {
+            }
+
++ Response 401 (text/plain; charset=utf-8)
+
+## /Activity/{id}
+
+### GET [GET]
+
+Returns the activity identified by the specified `id`.
+
++ Parameters
+    + id (string) - The `id` of the activity to return.
+
++ Request (application/hal+json; charset=utf-8)
+
+    + Headers
+
+            Authorization: Bearer BEARER-TOKEN-FROM-AUTHN-API
+
++ Response 200 (application/hal+json; charset=utf-8)
+
+            {
+              "id": "201602180908080694086",
+              "location": {
+                "id": "COVENTRY",
+                "name": "Coventry"
+              },
+              "door": {
+                "id": "DOOR-1",
+                "name": "Door 1"
+              },
+              "doorProfile": {
+                "id": 1,
+                "name": "Return"
+              },
+              "scannedIn": [
+                "363003",
+                "612084",
+                "635673",
+                "759074",
+                "298681",
+                "581501",
+                "492596"
+              ],
+              "scannedOut": [
+                "784353",
+                "584084",
+                "557613",
+                "873799"
+              ],
+              "at": "2016-02-18T09:08:08.0694086+00:00",
+              "by": {
+                "id": "mark.woodhall",
+                "name": "Mark Woodhall",
+                "group": {
+                  "id": "BYBOX",
+                  "name": "ByBox"
+                }
+              },
+              "carrier": null,
+              "_links": {
+                "self": {
+                  "href": "http://private-555da-byboxstockonnectapi.apiary-mock.com/Activity/201602180908080694086"
+                }
+              }
+            }
+
++ Request (application/hal+json)
+
+    ##### This request is to simulate the use of an invalid Bearer token.
+
+    + Headers
+
+            Authorization: Bearer INVALID-BEARER-TOKEN
+
+    + Body
+
+            {
+            }
+
++ Response 401 (text/plain; charset=utf-8)

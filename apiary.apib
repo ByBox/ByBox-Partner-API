@@ -126,7 +126,7 @@ This is returned when the `identifer` specified is already is use.
 
 + Response 400 (text/plain; charset=utf-8)
 
-## /Users{?identifier,barcode,orderReference,door,suspended,page}
+## /Users{?identifier,barcode,orderReference,door,location,suspended,page}
 
 ### SEARCH [GET]
 
@@ -138,6 +138,7 @@ Search for users that match the specified parameters
     + `barcode` (string, optional)
     + `orderReference` (string, optional)
     + `door` (string, optional)
+    + `location` (string, optional)
     + `suspended` (boolean, optional)
         + Default: `false`
     + `page` (boolean, optional)
@@ -345,9 +346,9 @@ This is returned when the `identifier` specified in the uri doesn't match an exi
 
 ### ASSIGN [POST]
 
-Assigns the collection of a specifed `Package` from a specified `Door`to a particular `User`. In instances where the
-specified `User` does not already have access to `door` then access will be automatically granted and the `User` will receive
-temporary keys for the `Door.` After the `Package` has been collected this temporary access will be revoked.
+Assigns the collection of a specifed `Package` from a specified `Location` to a particular `User`. In instances where the
+specified `User` does not already have access to the `Location` then access will be automatically granted and the `User` will receive
+temporary keys for the `Location.` After the `Package` has been collected this temporary access will be revoked.
 
 + parameters
 
@@ -356,8 +357,8 @@ temporary keys for the `Door.` After the `Package` has been collected this tempo
 + Request (application/json)
 
     + `barcode` (string) - The `barcode` of the `Package` to assign
-    + `door` (string) -- The `identifier` that defines the `Door` from which the `Package` will be collected.
-    + `preAdvise` (bool) -- If the `Package` is not currently in the door, set the `Package` to the `User` when it arrives in the `Door`
+    + `location` (string) -- The `identifier` that defines the `Location` from which the `Package` will be collected.
+    + `preAdvise` (bool) -- If the `Package` is not currently at the location, set the `Package` to the `User` when it arrives at the `Location`
     
     + Headers
 
@@ -367,7 +368,7 @@ temporary keys for the `Door.` After the `Package` has been collected this tempo
 
             {
                 "barcode": "ABC12345SBS",
-                "doorId": "DOOR-2",
+                "location": "LOCATION-2",
                 "preAdvise": false
             }
 
@@ -377,7 +378,7 @@ This status is returned when the request was accepted for processing.
     + Body
 
 + Response 404 (application/json; charset=utf-8)
-This status is returned when the request was structurally valid but the specified `user` or `door` does not exist.
+This status is returned when the request was structurally valid but the specified `user` or `location` does not exist.
 
     + Body
 
@@ -413,8 +414,8 @@ This status is returned when the request was structurally valid but the specifie
 
 ### UNASSIGN [DELETE]
 
-Unassigns the collection of a specifed `Package` from a specified `Door`to a particular `User`. If the `User` was previously granted
-temporary access to `Door` then the unassignment process will revoke this access.
+Unassigns the collection of a specifed `Package` from a specified `Location` to a particular `User`. If the `User` was previously granted
+temporary access to `Location` then the unassignment process will revoke this access.
 
 + parameters
 
@@ -423,7 +424,7 @@ temporary access to `Door` then the unassignment process will revoke this access
 + Request (application/json)
 
     + `barcode` (string) - The `barcode` of the `Package` to unassign
-    + `door` (string) -- The `identifier` that defines the `Door` from which the `Package` will be collected.
+    + `location` (string) -- The `identifier` that defines the `Location` from which the `Package` will be collected.
     
     + Headers
 
@@ -433,7 +434,7 @@ temporary access to `Door` then the unassignment process will revoke this access
 
             {
                 "barcode": "ABC12345SBS",
-                "doorId": "DOOR-2",
+                "location": "LOCATION-2",
             }
 
 + Response 200 (application/json; charset=utf-8)
@@ -442,7 +443,7 @@ This status is returned when the request was accepted for processing
     + Body
 
 + Response 404 (application/json; charset=utf-8)
-This status is returned when the request was structurally valid but the specified `user` or `door` does not exist.
+This status is returned when the request was structurally valid but the specified `user` or `location` does not exist.
 
     + Body
 
@@ -489,8 +490,6 @@ This status is returned when the request was structurally valid but the specifie
 Creates a new `Sku` with the supplied `identifier` and `description`.
 
 + Request (application/json)
-
-    ##### The following defines the body specification for the `PUT` request.
     
     + identifier (string) - The value that uniqely identifies a `Sku`
     + `description` (string) -- The `description` associated with the `sku`.
@@ -546,7 +545,7 @@ This is returned when the `identifer` specified is already is use.
 
 + Response 400 (text/plain; charset=utf-8)
 
-## /Skus{?identifier,door,barcode,suspended,page}
+## /Skus{?identifier,door,location,barcode,suspended,page}
 
 ### SEARCH [GET]
 
@@ -555,6 +554,7 @@ Searches for Skus matching the specified parameters
 + Parameters
     + identifier (string, optional) -- The value that uniquely identifies a `Sku`
     + door (string, optional) -- The value that uniquely identifies a `Door`
+    + location (string, optional) -- The value that uniquely identifies a `Location`
     + barcode (string, optional) -- The barcode of a package that has been assigned a sku
     + suspended (boolean, optional) -- If the sku is suspended or not
         + Default: `false`
@@ -610,6 +610,7 @@ Searches for Skus matching the specified parameters
                     "description": "Macbook Air",
                     "packages": [
                         {
+                            "Location": "L002",
                             "Door": "D001",
                             "Barcode": "12345ABS"
                         }
@@ -626,6 +627,7 @@ Searches for Skus matching the specified parameters
                     "description": "Macbook Air 2016",
                     "packages": [
                         {
+                            "Location": "L002",
                             "Door": "D002",
                             "Barcode": "2828282"
                         }
@@ -670,6 +672,7 @@ Returns the `Sku` that has the specified `identifier`.
                 "description": "Macbook Air",
                 "packages": [
                    {
+                     "Location": "L002",
                      "Door": "D001",
                      "Barcode": "12345ABS"
                     }
@@ -754,7 +757,7 @@ This is returned when the new `identifer` specified is already is use.
 
 ### ASSIGN [POST]
 
-Assigns the specifed `Sku` to a `Package` in a particular `Door`.
+Assigns the specifed `Sku` to a `Package` at a particular `Location`.
 
 + Parameters
     + identifier (string) - The `identifier` of the `Sku` to assign
@@ -762,9 +765,9 @@ Assigns the specifed `Sku` to a `Package` in a particular `Door`.
 + Request (application/json)
 
     ##### The following defines the body specification for the `Assign` `POST` request.
-    + `door` (string) -- The `identifier` of the `Door` that contains the `Package` to assign to the `Sku`.
+    + `location` (string) -- The `identifier` of the `Location` that contains the `Package` to assign to the `Sku`.
     + `barcode` (string) -- The barcode of the `Package` to assign to the `Sku`.
-    + `preAdvise` (bool) -- If the `Package` is not currently in the door, set the `Package` to the `Sku` when it arrives in the `Door`
+    + `preAdvise` (bool) -- If the `Package` is not currently in the location, set the `Package` to the `Sku` when it arrives at the `Location`
     
     + Headers
 
@@ -773,7 +776,7 @@ Assigns the specifed `Sku` to a `Package` in a particular `Door`.
     + Body
 
             {
-                "doorId": "DOOR-1",
+                "location": "LOCATION-1",
                 "barcode": "ABC1234ABS"
             }
 
@@ -783,7 +786,7 @@ This status is returned when the `Assign` request was accepted for processing.
     + Body
 
 + Response 404 (application/json; charset=utf-8)
-This status is returned when the `Assign` request was structurally valid but the specified `doorId` or `barcode` does not exist.
+This status is returned when the `Assign` request was structurally valid but the specified `location` or `barcode` does not exist.
 
     + Body
 
@@ -819,15 +822,14 @@ This status is returned when the `Assign` request was structurally valid but the
 
 ### UNASSIGN [DELETE]
 
-Unassigns the specifed `Sku` from a specified `Package` in the specified `Door`
+Unassigns the specifed `Sku` from a specified `Package` in the specified `Location`
 
 + Parameters
     + identifier (string) - The `identifier` of the `Sku` to unassign
 
 + Request (application/json)
-
-    ##### The following defines the body specification for the `Unassign` `POST` request.
-    + `door` (string) -- The `identifier` of the `Door`that contains the assigned package.
+    
+    + `location` (string) -- The `identifier` of the `Location` that contains the assigned package.
     + `barcode` (string) -- The barcode of the `Package` to be unassigned
 
     + Headers
@@ -837,7 +839,7 @@ Unassigns the specifed `Sku` from a specified `Package` in the specified `Door`
     + Body
 
             {
-                "door": "DOOR-1",
+                "location": "LOCATION-1",
                 "barcode": "ABC12345ANS"
             }
 
@@ -847,7 +849,7 @@ This status is returned when the `Unassign` request was accepted for processing.
     + Body
 
 + Response 404 (application/json; charset=utf-8)
-This status is returned when the `Unassign` request was structurally valid but the specified `doorId` or `barcode` does not exist.
+This status is returned when the `Unassign` request was structurally valid but the specified `location` or `barcode` does not exist.
 
     + Body
 
@@ -897,11 +899,11 @@ Creates a new `Order` with the supplied `orderReference`.
     + `orderReference` (string) - The unique identifier of this `Order`
     + `skus` (array[object], optional) -- A list of `items` by `sku` for creating the intial `Order`.
         + `sku` (string) -- The `identifier` of the `sku` to be collected.
-        + `door` (string) -- The `identifier` of the `door` to collect from
+        + `location` (string) -- The `identifier` of the `location` to collect from
         + `quantity` (number) -- The numeric quantity of `sku` item.
     + `packages` (array[object], optional) -- A list of `packages` by `barcode` for creating the intial `Order`.
         + `barcode` (string) -- The `barcide` of the `package` to be collected.
-        + `door` (string) -- The `identifier` of the `door` to collect from
+        + `location` (string) -- The `identifier` of the `location` to collect from
         
     + Headers
 
@@ -913,14 +915,14 @@ Creates a new `Order` with the supplied `orderReference`.
                 "skus": [
                     {
                         "sku": "SK123123123",
-                        "door": "DN1",
+                        "location": "LOC1",
                         "quantity": 2
                     }
                 ],
                 "packages": [
                    {
                         "barcode": "ABC12345ASN",
-                        "door": "DN2"
+                        "location": "LOC2"
                    }
                 ]
             }
@@ -935,7 +937,7 @@ This is returned when the `orderReference` specified is already is use.
 
     + Body
     
-## /Orders{?orderReference,user,sku,door,cancelled,page}
+## /Orders{?orderReference,user,sku,location,cancelled,page}
 
 ### SEARCH [GET]
 
@@ -945,7 +947,7 @@ Returns all `Orders` that contain the specified parameters
     + orderReference (string, optional) - The `Order` number
     + user (string, optional) -- The `User` the `Order` is assigned to
     + sku (string, optional) -- The `Sku` the `Order` contains
-    + door (string, optional) -- The `Door` the `Order` has items in
+    + location (string, optional) -- The `Location` the `Order` has items in
     + cancelled (boolean, optional) -- If the `Order` is cancelled or not
         + Default: `false`
     + page (boolean, optional) -- The page of results to return
@@ -977,11 +979,11 @@ Returns all `Orders` that contain the specified parameters
                   "href": "http://private-555da-byboxstockonnectapi.apiary-mock.com/Orders?orderReference=ORDERREF&page=1"
                 },
                 "page": {
-                  "href": "http://private-555da-byboxstockonnectapi.apiary-mock.com/Orders{?orderReference,user,sku,door,cancelled,page}",
+                  "href": "http://private-555da-byboxstockonnectapi.apiary-mock.com/Orders{?orderReference,user,sku,location,cancelled,page}",
                   "templated": true
                 },
                 "orders": {
-                  "href": "http://private-555da-byboxstockonnectapi.apiary-mock.com/Orders{?orderReference,user,sku,door,cancelled,page}",
+                  "href": "http://private-555da-byboxstockonnectapi.apiary-mock.com/Orders{?orderReference,user,sku,location,cancelled,page}",
                   "templated": true
                 },
                 "order": [
@@ -1002,14 +1004,14 @@ Returns all `Orders` that contain the specified parameters
                         "skus": [
                             {
                                 "sku": "SK123123123",
-                                "door": "DN1",
+                                "location": "LOC1",
                                 "quantity": 2
                             }
                         ],
                         "packages": [
                            {
                                 "barcode": "ABC12345ASN",
-                                "door": "DN2"
+                                "location": "LOC2"
                            }
                         ],
                         "_links": {
@@ -1025,14 +1027,14 @@ Returns all `Orders` that contain the specified parameters
                         "skus": [
                             {
                                 "sku": "SK123123123",
-                                "door": "DN1",
+                                "location": "LOC1",
                                 "quantity": 2
                             }
                         ],
                         "packages": [
                            {
                                 "barcode": "ABC12345ASN",
-                                "door": "DN2"
+                                "location": "LOC2"
                            }
                         ],
                         "_links": {
@@ -1050,15 +1052,14 @@ Returns all `Orders` that contain the specified parameters
 ### ASSIGN [POST]
 
 Assigns the `Order` specified by `orderReference` to the `User`. In instances where the
-specified `User` does not already have access to every `door` required to complete the `Order` then access will be automatically granted and the `User` will receive
-temporary keys for the `Door.` After each `Sku` and `Package` has been collected this temporary access will be revoked.
+specified `User` does not already have access to every `location` required to complete the `Order` then access will be automatically granted and the `User` will receive
+temporary keys for the `Location.` After each `Sku` and `Package` has been collected this temporary access will be revoked.
 
 + Parameters
     + orderReference (string) - The `Order` number
 
 + Request (application/json)
 
-    ##### The following defines the body specification for the `Assign` `POST` request.
     + `user` (string) -- the `identifier` that defines the `User` to which the `Order` will be assigned.
 
     + Headers
@@ -1114,7 +1115,7 @@ This is returned when the `Assign` request was structurally valid but the specif
 ### UNASSIGN [DELETE]
 
 Unassign an `Order` from the specified `User`. If the `User` was previously granted
-temporary access to any `doors` then the unassignment process will revoke this access.
+temporary access to any `Location` then the unassignment process will revoke this access.
 
 
 + Parameters
@@ -1185,18 +1186,17 @@ This is returned when the `Order` is not currently assigned to a user.
 ### ASSIGN [POST]
 
 Adds skus to the specified `Order`. In instances where the `Order` has already been assigned and the
-specified `User` does not already have access to every `door` required to collect the specfied `items` then access will be automatically granted and the `User` will receive
-temporary keys for the required doors.
+specified `User` does not already have access to every `location` required to collect the specfied `items` then access will be automatically granted and the `User` will receive
+temporary keys for the required locations.
 
 + Parameters
     + orderReference (string) - The `Order` reference
 
 + Request (application/json)
 
-    ##### The following defines the body specification for the `AddSku` `POST` request.
     + `skus` (array[object], optional) -- A list of `items` by `sku` for creating the intial `Order`.
         + `sku` (string) -- The `identifier` of the `sku` to be collected.
-        + `door` (string) -- The `identifier` of the `door` to collect from
+        + `location` (string) -- The `identifier` of the `location` to collect from
         + `quantity` (number) -- The numeric quantity of `sku` item.
 
     + Headers
@@ -1210,18 +1210,18 @@ temporary keys for the required doors.
                     {
                         "sku": "SK321321321",
                         "quantity": 2,
-                        "door": "DOOR-1"
+                        "location": "LOCATION-1"
                     }
                 ]
             }
 
 + Response 200 (application/json; charset=utf-8)
-This is returned when the `AddSkus` request was accepted for processing.
+This is returned when the request was accepted for processing.
 
     + Body
 
 + Response 404 (application/json; charset=utf-8)
-This is returned when the `AddSkus` request is structurally valid but the `orderReference` does not exist.
+This is returned when the request is structurally valid but the `orderReference` does not exist.
 
     + Body
 
@@ -1258,7 +1258,7 @@ This is returned when the `AddSkus` request is structurally valid but the `order
 ### UNASSIGN [DELETE]
 
 Remove skus from the specified `Order`. In instances where the `Order` has already been assigned and the
-specified `User` has already been granted temporary access to every `door` required to collect the specified `skus`
+specified `User` has already been granted temporary access to every `location` required to collect the specified `skus`
 then the temporary access will be revoked.
 
 + Parameters
@@ -1269,7 +1269,7 @@ then the temporary access will be revoked.
     ##### The following defines the body specification for the `RemoveSkus` `POST` request.
      + `skus` (array[object], optional) -- A list of `skus` to remove from the `Order`.
         + `sku` (string) -- The `identifier` of the `sku` to be removed.
-        + `door` (string) -- The `identifier` of the `door` to remove from.
+        + `location` (string) -- The `identifier` of the `location` to remove from.
         + `quantity` (number) -- The numeric quantity of `sku` items to remove.
 
     + Headers
@@ -1282,19 +1282,19 @@ then the temporary access will be revoked.
                 "skus": [
                     {
                         "sku": "SK321321321",
-                        "door": "DOOR-1",
+                        "location": "LOCATION-1",
                         "quantity": 2
                     }
                 ]
             }
 
 + Response 200 (application/json; charset=utf-8)
-This is returned when the `RemoveSkus` request was accepted for processing.
+This is returned when the request was accepted for processing.
 
     + Body
 
 + Response 404 (application/json; charset=utf-8)
-This is returned when the `RemoveSkus` request is structurally valid but the `orderReference` does not exist.
+This is returned when the  request is structurally valid but the `orderReference` does not exist.
 
     + Body
 
@@ -1333,18 +1333,17 @@ This is returned when the `RemoveSkus` request is structurally valid but the `or
 ### ASSIGN [POST]
 
 Adds package to the specified `Order`. In instances where the `Order` has already been assigned and the
-specified `User` does not already have access to every `door` required to collect the specfied `packages` then access will be automatically granted and the `User` will receive
-temporary keys for the required doors.
+specified `User` does not already have access to every `Location` required to collect the specfied `packages` then access will be automatically granted and the `User` will receive
+temporary keys for the required locations.
 
 + Parameters
     + orderReference (string) - The `Order` reference
 
 + Request (application/json)
 
-    ##### The following defines the body specification for the `AddPackages` `POST` request.
     + `packages` (array[object], optional) -- A list of `packages` by `barcode` to add to the `Order`.
         + `barcode` (string) -- The `barcode` of the `package` to be collected.
-        + `door` (string) -- The `identifier` of the `door` to collect from
+        + `location` (string) -- The `identifier` of the `location` to collect from
 
     + Headers
 
@@ -1356,18 +1355,18 @@ temporary keys for the required doors.
                 "packages": [
                     {
                         "barcode": "SK321321321",
-                        "door": "DOOR-1"
+                        "location": "LOCATION-1"
                     }
                 ]
             }
 
 + Response 200 (application/json; charset=utf-8)
-This is returned when the `AddPackages` request was accepted for processing.
+This is returned when the request was accepted for processing.
 
     + Body
 
 + Response 404 (application/json; charset=utf-8)
-This is returned when the `AddPackages` request is structurally valid but the `orderReference` does not exist.
+This is returned when the request is structurally valid but the `orderReference` does not exist.
 
     + Body
 
@@ -1404,7 +1403,7 @@ This is returned when the `AddPackages` request is structurally valid but the `o
 ### UNASSIGN [DELETE]
 
 Remove packages from the specified `Order`. In instances where the `Order` has already been assigned and the
-specified `User` has already been granted temporary access to every `door` required to collect the specified `packages`
+specified `User` has already been granted temporary access to every `Location` required to collect the specified `packages`
 then the temporary access will be revoked.
 
 + Parameters
@@ -1412,10 +1411,9 @@ then the temporary access will be revoked.
 
 + Request (application/json)
 
-    ##### The following defines the body specification for the `RemovePackages` `POST` request.
-   + `packages` (array[object], optional) -- A list of `packages` by `barcode` to add to the `Order`.
-        + `barcode` (string) -- The `barcode` of the `package` to be collected.
-        + `door` (string) -- The `identifier` of the `door` to collect from
+   + `packages` (array[object], optional) -- A list of `packages` by `barcode` to remove from the `Order`.
+        + `barcode` (string) -- The `barcode` of the `package` to be removed.
+        + `location` (string) -- The `identifier` of the `location` where the `package` is located
 
     + Headers
 
@@ -1427,18 +1425,18 @@ then the temporary access will be revoked.
                 "packages": [
                     {
                         "barcode": "SK321321321",
-                        "door": "DOOR-1"
+                        "location": "LOCATION-1"
                     }
                 ]
             }
 
 + Response 200 (application/json; charset=utf-8)
-This is returned when the `RemovePackages` request was accepted for processing.
+This is returned when the request was accepted for processing.
 
     + Body
 
 + Response 404 (application/json; charset=utf-8)
-This is returned when the `RemovePackages` request is structurally valid but the `orderReference` does not exist.
+This is returned when the request is structurally valid but the `orderReference` does not exist.
 
     + Body
 
@@ -1502,14 +1500,14 @@ Returns the details of the order matching the supplied `orderReference`
                 "skus": [
                     {
                         "sku": "SK123123123",
-                        "door": "DN1",
+                        "location": "LOC1",
                         "quantity": 2
                     }
                 ],
                 "packages": [
                    {
                         "barcode": "ABC12345ASN",
-                        "door": "DN2"
+                        "location": "LOC2"
                    }
                 ],
                 "_links": {
@@ -1537,7 +1535,8 @@ Change the `Order` specified by `orderReference` to have the newly supplied refe
     + Body
 
             {
-                "orderReference": "NEWORDERREFERENCE1"
+                "orderReference": "NEWORDERREFERENCE1",
+                "isCancelled": false
             }
 
 
@@ -1591,7 +1590,7 @@ This is returned when the new `orderReference` specified is already is use.
 `Packages` are uniquely identified by their `barcode` and may go through various stages in their lifecyle, they may be delivered, collected, or returned.
 `Packages` may be directly assigned to a `User` or added to an `Order` to be collected. A `Package` may also be associated with a `Sku`.
 
-## /Packages{?door,page,pageSize}
+## /Packages{?location,page,pageSize}
 
 ### SEARCH [GET]
 
@@ -1602,7 +1601,7 @@ Since this endpoint supports [Hypermedia](https://en.wikipedia.org/wiki/Hypermed
 simple to navigate programmatically through all pages to obtain a complete snapshot using the `_links` element.
 
 + Parameters
-    + door (string, optional) - Filter by the door identifier
+    + location (string, optional) - Filter by the location identifier
     + page (number, optional) - The page of results to return.
         + Default: `1`
     + pageSize (number, optional) - The number of results to return per page. This may be subject to an upper limit but will be reflected in the `pageSize` value returned in the response body.
@@ -1623,24 +1622,24 @@ simple to navigate programmatically through all pages to obtain a complete snaps
               "pageSize": 25,
               "_links": {
                 "self": {
-                  "href": "http://private-555da-byboxstockonnectapi.apiary-mock.com/Packages?door=DOOR&page=2&pageSize=25"
+                  "href": "http://private-555da-byboxstockonnectapi.apiary-mock.com/Packages?location=LOC&page=2&pageSize=25"
                 },
                 "prev": {
-                  "href": "http://private-555da-byboxstockonnectapi.apiary-mock.com/Packages?door=DOOR&page=1&pageSize=25"
+                  "href": "http://private-555da-byboxstockonnectapi.apiary-mock.com/Packages?location=LOC&page=1&pageSize=25"
                 },
                 "next": {
-                  "href": "http://private-555da-byboxstockonnectapi.apiary-mock.com/Packages?door=DOOR&page=3&pageSize=25"
+                  "href": "http://private-555da-byboxstockonnectapi.apiary-mock.com/Packages?location=LOC&page=3&pageSize=25"
                 },
                 "page": {
-                  "href": "http://private-555da-byboxstockonnectapi.apiary-mock.com/Packages{?door,page,pageSize}",
+                  "href": "http://private-555da-byboxstockonnectapi.apiary-mock.com/Packages{?location,page,pageSize}",
                   "templated": true
                 },
                 "packages": [
                   {
-                    "href": "http://private-555da-byboxstockonnectapi.apiary-mock.com/Packages/DOOR-1/201602180908080694086"
+                    "href": "http://private-555da-byboxstockonnectapi.apiary-mock.com/Packages/LOC-1/201602180908080694086"
                   },
                   {
-                    "href": "http://private-555da-byboxstockonnectapi.apiary-mock.com/Packages/DOOR-1/201602180908080694194"
+                    "href": "http://private-555da-byboxstockonnectapi.apiary-mock.com/Packages/LOC-1/201602180908080694194"
                   }
                 ]
               },
@@ -1667,7 +1666,7 @@ simple to navigate programmatically through all pages to obtain a complete snaps
                     },
                     "_links": {
                       "self": {
-                        "href": "http://private-555da-byboxstockonnectapi.apiary-mock.com/Packages/DOOR-1/201602180908080694086"
+                        "href": "http://private-555da-byboxstockonnectapi.apiary-mock.com/Packages?location=loc-1&barcode=201602180908080694086"
                       }
                     }
                   },
@@ -1692,7 +1691,7 @@ simple to navigate programmatically through all pages to obtain a complete snaps
                     },
                     "_links": {
                       "self": {
-                        "href": "http://private-555da-byboxstockonnectapi.apiary-mock.com/Packages/DOOR-1/201602180908080694194"
+                        "href": "http://private-555da-byboxstockonnectapi.apiary-mock.com/Packages?location=coventry&barcode=201602180908080694194"
                       }
                     }
                   }
@@ -1715,14 +1714,14 @@ simple to navigate programmatically through all pages to obtain a complete snaps
 
 + Response 401 (text/plain; charset=utf-8)
 
-## /Packages{?door,barcode}
+## /Packages{?location,barcode}
 
 ### GET [GET]
 
-Returns the `Package` identified by the specified `barcode` and `door` identifier.
+Returns the `Package` identified by the specified `barcode` and `location` identifier.
 
 + Parameters
-    + door (string) - The identifier of the `door` that the `Package` is currently in
+    + location (string) - The identifier of the `location` that the `Package` is currently in
     + barcode (string) - The `barcode` of the `Package` to return.
 
 + Request (application/hal+json; charset=utf-8)

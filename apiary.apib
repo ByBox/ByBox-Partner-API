@@ -558,7 +558,7 @@ Searches for Skus matching the specified parameters
     + barcode (string, optional) -- The barcode of a package that has been assigned a sku
     + suspended (boolean, optional) -- If the sku is suspended or not
         + Default: `false`
-    + page (boolean, optional) -- The page of results to return
+    + page (int, optional) -- The page of results to return
         + Default: `1`
 
 + Request (application/json)
@@ -950,7 +950,7 @@ Returns all `Orders` that contain the specified parameters
     + location (string, optional) -- The `Location` the `Order` has items in
     + cancelled (boolean, optional) -- If the `Order` is cancelled or not
         + Default: `false`
-    + page (boolean, optional) -- The page of results to return
+    + page (int, optional) -- The page of results to return
         + Default: `1`
     
 + Request (application/json)

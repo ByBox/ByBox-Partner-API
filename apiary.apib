@@ -92,7 +92,7 @@ This is returned when the `User` was accepted for creation.
             }
 
 + Response 409 (application/json; charset=utf-8)
-This is returned when the `identifer` specified is already is use.
+This is returned when the `identifier` specified is already is use.
 
     + Body
 
@@ -165,7 +165,7 @@ Search for users that match the specified parameters
               "page": 1,
               "_links": {
                 "self": {
-                  "href": "http://private-555da-byboxstockonnectapi.apiary-mock.com/Users?identifer=DO001&page=1"
+                  "href": "http://private-555da-byboxstockonnectapi.apiary-mock.com/Users?identifier=DO001&page=1"
                 },
                 "page": {
                   "href": "http://private-555da-byboxstockonnectapi.apiary-mock.com/Users{?identifier,barcode,orderReference,door,suspended,page}",
@@ -303,7 +303,7 @@ This is returned when the `User` was accepted for update.
     + Body
     
 + Response 409 (application/json; charset=utf-8)
-This is returned when the `identifer` specified in the body is already is use.
+This is returned when the `identifier` specified in the body is already is use.
    
     + Body
     
@@ -511,7 +511,7 @@ This is returned when the `Sku` was accepted for creation.
     + Body
 
 + Response 409 (application/json; charset=utf-8)
-This is returned when the `identifer` specified is already is use.
+This is returned when the `identifier` specified is already is use.
 
     + Body
 
@@ -584,7 +584,7 @@ Searches for Skus matching the specified parameters
               "page": 1,
               "_links": {
                 "self": {
-                  "href": "http://private-555da-byboxstockonnectapi.apiary-mock.com/Skus?identifer=MBA&page=1"
+                  "href": "http://private-555da-byboxstockonnectapi.apiary-mock.com/Skus?identifier=MBA&page=1"
                 },
                 "page": {
                   "href": "http://private-555da-byboxstockonnectapi.apiary-mock.com/Skus{?identifier,door,barcode,suspended,page}",
@@ -683,7 +683,12 @@ Returns the `Sku` that has the specified `identifier`.
                     "href": "http://private-555da-byboxstockonnectapi.apiary-mock.com/Users/MBA/"
                 }
             }
-            
+
++ Response 404 (application/json; charset=utf-8)
+This is returned when the  `sku` is not found.
+
+    + Body
+
 ### UPDATE [PUT]
 
 Updates an existing sku `Sku` with the supplied `identifier`.
@@ -714,12 +719,7 @@ This is returned when the `Sku` was accepted for update.
     + Body
     
 + Response 404 (application/json; charset=utf-8)
-This is returned when the  `identifer` specified does not exist.
-
-    + Body
-
-+ Response 409 (application/json; charset=utf-8)
-This is returned when the new `identifer` specified is already is use.
+This is returned when the  `identifier` specified does not exist.
 
     + Body
 

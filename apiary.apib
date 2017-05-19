@@ -1597,9 +1597,6 @@ This is returned when the new `orderReference` specified is already is use.
 Returns a paged snapshot of all packages and their associated data. Results are sorted so that
 packages with the most recent activity are returned first.
 
-Since this endpoint supports [Hypermedia](https://en.wikipedia.org/wiki/Hypermedia) and returns `application/hal+json` it is
-simple to navigate programmatically through all pages to obtain a complete snapshot using the `_links` element.
-
 + Parameters
     + location (string, optional) - Filter by the location identifier
     + page (number, optional) - The page of results to return.
@@ -1607,44 +1604,20 @@ simple to navigate programmatically through all pages to obtain a complete snaps
     + pageSize (number, optional) - The number of results to return per page. This may be subject to an upper limit but will be reflected in the `pageSize` value returned in the response body.
         + Default: `50`
 
-+ Request (application/hal+json; charset=utf-8)
++ Request (application/json; charset=utf-8)
 
     + Headers
 
             Authorization: Bearer BEARER-TOKEN-FROM-AUTHN-API
 
-+ Response 200 (application/hal+json; charset=utf-8)
++ Response 200 (application/json; charset=utf-8)
 
             {
               "totalResults": 100,
               "totalPages": 4,
               "page": 1,
               "pageSize": 25,
-              "_links": {
-                "self": {
-                  "href": "http://private-555da-byboxstockonnectapi.apiary-mock.com/Packages?location=LOC&page=2&pageSize=25"
-                },
-                "prev": {
-                  "href": "http://private-555da-byboxstockonnectapi.apiary-mock.com/Packages?location=LOC&page=1&pageSize=25"
-                },
-                "next": {
-                  "href": "http://private-555da-byboxstockonnectapi.apiary-mock.com/Packages?location=LOC&page=3&pageSize=25"
-                },
-                "page": {
-                  "href": "http://private-555da-byboxstockonnectapi.apiary-mock.com/Packages{?location,page,pageSize}",
-                  "templated": true
-                },
-                "packages": [
-                  {
-                    "href": "http://private-555da-byboxstockonnectapi.apiary-mock.com/Packages/LOC-1/201602180908080694086"
-                  },
-                  {
-                    "href": "http://private-555da-byboxstockonnectapi.apiary-mock.com/Packages/LOC-1/201602180908080694194"
-                  }
-                ]
-              },
-              "_embedded": {
-                "packages": [
+              "packages": [
                   {
                     "barcode": "201602180908080694086",
                     "location": {
@@ -1663,11 +1636,6 @@ simple to navigate programmatically through all pages to obtain a complete snaps
                     "by": {
                       "id": "mw1",
                       "name": "Mark Woodhall"
-                    },
-                    "_links": {
-                      "self": {
-                        "href": "http://private-555da-byboxstockonnectapi.apiary-mock.com/Packages?location=loc-1&barcode=201602180908080694086"
-                      }
                     }
                   },
                   {
@@ -1688,18 +1656,12 @@ simple to navigate programmatically through all pages to obtain a complete snaps
                     "by": {
                       "id": "mark.woodhall,
                       "name": "Mark Woodhall"
-                    },
-                    "_links": {
-                      "self": {
-                        "href": "http://private-555da-byboxstockonnectapi.apiary-mock.com/Packages?location=coventry&barcode=201602180908080694194"
-                      }
                     }
                   }
                 ]
-              }
             }
 
-+ Request (application/hal+json)
++ Request (application/json)
 
     ##### This request is to simulate the use of an invalid Bearer token.
 
@@ -1724,16 +1686,15 @@ Returns the `Package` identified by the specified `barcode` and `location` ident
     + location (string) - The identifier of the `location` that the `Package` is currently in
     + barcode (string) - The `barcode` of the `Package` to return.
 
-+ Request (application/hal+json; charset=utf-8)
++ Request (application/json; charset=utf-8)
 
     + Headers
 
             Authorization: Bearer BEARER-TOKEN-FROM-AUTHN-API
 
-+ Response 200 (application/hal+json; charset=utf-8)
++ Response 200 (application/json; charset=utf-8)
 
             {
-              "package": {
                 "barcode": "201602180908080694086",
                 "location": {
                   "id": "COVENTRY",
@@ -1751,16 +1712,10 @@ Returns the `Package` identified by the specified `barcode` and `location` ident
                 "by": {
                   "id": "mark.woodhall",
                   "name": "Mark Woodhall"
-                },
-                "_links": {
-                  "self": {
-                    "href": "http://private-555da-byboxstockonnectapi.apiary-mock.com/Packages/DOOR-1/201602180908080694086"
-                  }
                 }
-              }
             }
 
-+ Request (application/hal+json)
++ Request (application/json)
 
     ##### This request is to simulate the use of an invalid Bearer token.
 

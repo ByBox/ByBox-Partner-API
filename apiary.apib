@@ -1620,43 +1620,17 @@ packages with the most recent activity are returned first.
               "packages": [
                   {
                     "barcode": "201602180908080694086",
-                    "location": {
-                      "id": "LOC-1",
-                      "name": "Coventry"
-                    },
-                    "door": {
-                      "id": "DOOR-1",
-                      "name": "Door 1"
-                    },
-                    "doorProfile": {
-                      "id": 1,
-                      "name": "Delivery"
-                    },
-                    "at": "2016-02-18T09:08:08.0694086+00:00",
-                    "by": {
-                      "id": "mw1",
-                      "name": "Mark Woodhall"
-                    }
+                    "location": "L002"
+                    "door":  "DOOR-1"
+                    "scannedInDate": "2016-02-18T09:08:08.0694086+00:00",
+                    "user": "MW1"
                   },
                   {
-                    "barcode": "201602180908080694194",
-                    "location": {
-                      "id": "COVENTRY",
-                      "name": "Coventry"
-                    },
-                    "door": {
-                      "id": "DOOR-2",
-                      "name": "Door 2"
-                    },
-                    "doorProfile": {
-                      "id": 1,
-                      "name": "Delivery"
-                    },
-                    "at": "2016-02-18T09:08:08.0694086+00:00",
-                    "by": {
-                      "id": "mark.woodhall,
-                      "name": "Mark Woodhall"
-                    }
+                    "barcode": "201602180908080694086",
+                    "location": "L002"
+                    "door":  "DOOR-1"
+                    "scannedInDate": "2016-02-18T09:08:08.0694086+00:00",
+                    "user": "MW1"
                   }
                 ]
             }
@@ -1696,23 +1670,10 @@ Returns the `Package` identified by the specified `barcode` and `location` ident
 
             {
                 "barcode": "201602180908080694086",
-                "location": {
-                  "id": "COVENTRY",
-                  "name": "Coventry"
-                },
-                "door": {
-                  "id": "DOOR-1",
-                  "name": "Door 1"
-                },
-                "doorProfile": {
-                  "id": 1,
-                  "name": "Return"
-                },
-                "at": "2016-02-18T09:08:08.0694086+00:00",
-                "by": {
-                  "id": "mark.woodhall",
-                  "name": "Mark Woodhall"
-                }
+                "location": "L002"
+                "door":  "DOOR-1"
+                "scannedInDate": "2016-02-18T09:08:08.0694086+00:00",
+                "user": "MW1"
             }
 
 + Request (application/json)

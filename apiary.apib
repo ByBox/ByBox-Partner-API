@@ -40,28 +40,30 @@ This documentation assumes identifier data such as `door` and `user` are values 
 
 # Group Users
 
-`Users` are uniquly identified by their `identifier` and must also contain an `email` and `username`.
+`Users` are uniquely identified by their `identifier` and must also contain an `email` and `username`.
 
-## /Users
+## /Users?{selfManageActivation}
 
 ### CREATE [POST]
 
 Creates a new `User` with the supplied `identifier` and other values
 
++ Parameters
+    + `selfManageActivation` (bool) -- if set to true the activation code will not be generated and the user activation email will not be sent to the user
+
 + Request (application/json)
     
-    ##### The following defines the body specification for the `PUT` request.
+    ##### The following defines the body specification for the `POST` request.
     + `identifier` (string) -- The value that uniquely identifies a `User`
     + `username` (string) -- The `username` associated with the `User`.
     + `firstName` (string) -- The `firstName` associated with the `User`.
     + `lastName` (string) -- The `lastName` associated with the `User`.
-    + `email` (string) -- The `email` associated with the `User`.
-    + `role` (enum[string]) - The role the user has
+    + `emailAddress` (string) -- The `email` associated with the `User`.
+    + `roles` (enum[string]) - The role the user has
         + Members
             + `user`
             + `admin`
             + `readonly admin`
-    + `sendRegistrationNotification` (bool) -- Allow stockonnect to send the user a registration email or not
      
     + Headers
 
@@ -74,22 +76,14 @@ Creates a new `User` with the supplied `identifier` and other values
                 "username": "d.f.jones",
                 "firstName": "Danny",
                 "lastName": "Jones",
-                "email": "email@address.com",
-                "role": "user",
-                "sendRegistrationNotification": false
+                "emailAddress": "email@address.com",
+                "roles": "user"
             }
 
 + Response 200 (application/json; charset=utf-8)
 This is returned when the `User` was accepted for creation.
 
-    ##### The following defines the body specification for the `PUT` request.
-    + `activationCode` (string) -- The code the `User` can use to regester their account and set a password
-
     + Body
-    
-            {
-                "activationCode": "123123123"
-            }
 
 + Response 409 (application/json; charset=utf-8)
 This is returned when the `identifier` specified is already is use.
@@ -126,7 +120,7 @@ This is returned when the `identifier` specified is already is use.
 
 + Response 400 (text/plain; charset=utf-8)
 
-## /Users{?identifier,barcode,orderReference,door,location,suspended,page}
+## /Users{?identifier,username,barcode,orderReference,doorName,locationName,suspended,page}
 
 ### SEARCH [GET]
 
@@ -134,11 +128,12 @@ Search for users that match the specified parameters
 
 + Parameters
 
-    + `identifier` (string, optional) -- The 
+    + `identifier` (string, optional)
+    + `username` (string, optional)
     + `barcode` (string, optional)
     + `orderReference` (string, optional)
-    + `door` (string, optional)
-    + `location` (string, optional)
+    + `doorName` (string, optional)
+    + `locationName` (string, optional)
     + `suspended` (boolean, optional)
         + Default: `false`
     + `page` (int, optional)

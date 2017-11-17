@@ -1,1929 +1,2127 @@
-FORMAT: 1A
-
-# ByBox Stockonnect Partner API
-
-## Purpose
-
-This document describes the Stockonnect integration process for those wishing to integrate over HTTP.
-For more information about authentication and authorisation please see [the ByBox Stockonnect Authentication API documentation](http://docs.stockonnectauthenticationapi.apiary.io/).
-
-Using this site you can:
-
- * Generate sample code in cURL, Java, JavaScript, Node.js, Perl, Python, PHP, Ruby, GO, C#, Visual Basic, Groovy, Objective C, and Swift.
- * View the structural requirements of requests for various HTTP endpoints.
- * View the structure of expected responses and their associated HTTP status codes.
-
-Find out more about [using this documentation](https://blog.apiary.io/2014/03/21/Re-API-Design-for-Humans).
-
-## Authentication
-
-In this documentation `BEARER-TOKEN-FROM-AUTHN-API` refers to the token obtained from the [the ByBox Stockonnect Authentication API](http://docs.stockonnectauthenticationapi.apiary.io/).
-The identity of the client making the request is inferred using the `BEARER-TOKEN-FROM-AUTHN-API`. 
-A client will be issued an api token to pass to the authentication api that will then return a token to be used in this api
-
-## Glossary
-
-The following terms are used throughout this documentation.
-
-  * `User` - An end user of the Stockonnect App. Probably a delivery driver or engineer.
-  * `Location` - The location and logical grouping of a number of doors.
-  * `Door` - A door at a location that can hold contents.
-  * `Lock` - The physical part of a door that enables locking and unlocking.
-  * `Sku` -  A product identification code for a product
-  * `Order` - A logical grouping of products that may be delivered/collected.
-  * `Package` - Identifiable by a barcode and may contain 1+ physical items.
-  * `Activity` - A visit to a door, includes at least an unlocked and locked event.
-
-## Assumptions
-
-This documentation assumes identifier data such as `door` and `user` are values defined by the customer and already set up in the Stockonnect system 
-
-# Group Users
-
-`Users` are uniquely identified by their `identifier` and must also contain an `email` and `username`.
-
-## /Users?{selfManageActivation}
-
-### CREATE [POST]
-
-Creates a new `User` with the supplied `identifier` and other values
-
-+ Parameters
-    + `selfManageActivation` (bool) -- if set to true the activation code will not be generated and the user activation email will not be sent to the user
-
-+ Request (application/json)
-    
-    ##### The following defines the body specification for the `POST` request.
-    + `identifier` (string) -- The value that uniquely identifies a `User`
-    + `username` (string) -- The `username` associated with the `User`.
-    + `firstName` (string) -- The `firstName` associated with the `User`.
-    + `lastName` (string) -- The `lastName` associated with the `User`.
-    + `emailAddress` (string) -- The `email` associated with the `User`.
-    + `roles` (enum[string]) - The role the user has
-        + Members
-            + `user`
-            + `admin`
-            + `readonly admin`
-     
-    + Headers
-
-            Authorization: Bearer BEARER-TOKEN-FROM-AUTHN-API
-
-    + Body
-
-            {
-                "identifier": "DJ001",
-                "username": "d.f.jones",
-                "firstName": "Danny",
-                "lastName": "Jones",
-                "emailAddress": "email@address.com",
-                "roles": "user"
-            }
-
-+ Response 200 (application/json; charset=utf-8)
-This is returned when the `User` was accepted for creation.
-
-    + Body
-
-+ Response 409 (application/json; charset=utf-8)
-This is returned when the `identifier` specified is already is use.
-
-    + Body
-
-+ Request (application/json)
-
-    ##### This request is to simulate the use of an invalid Bearer token.
-
-    + Headers
-
-            Authorization: Bearer INVALID-BEARER-TOKEN
-
-    + Body
-
-            {
-            }
-
-+ Response 401 (text/plain; charset=utf-8)
-
-+ Request (application/json)
-
-    ##### This request is to simulate the use of an invalid body.
-
-    + Headers
-
-            Authorization: Bearer BEARER-TOKEN-FROM-AUTHN-API
-
-    + Body
-
-            {
-            }
-
-+ Response 400 (text/plain; charset=utf-8)
-
-## /Users{?identifier,username,barcode,orderReference,doorName,locationName,suspended,page}
-
-### SEARCH [GET]
-
-Search for users that match the specified parameters
-
-+ Parameters
-
-    + `identifier` (string, optional)
-    + `username` (string, optional)
-    + `barcode` (string, optional)
-    + `orderReference` (string, optional)
-    + `doorName` (string, optional)
-    + `locationName` (string, optional)
-    + `suspended` (boolean, optional)
-        + Default: `false`
-    + `page` (int, optional)
-        + Default: `1`
-
-+ Request (application/json)
-
-    + Headers
-
-            Authorization: Bearer BEARER-TOKEN-FROM-AUTHN-API
-
-    + Body
-    
-            {
-                "identifier": "DJ001",
-                "page": 1
-            }
-        
-+ Response 200  (application/hal+json)
-
-          {
-              "totalResults": 2,
-              "totalPages": 1,
-              "page": 1,
-              "_links": {
-                "self": {
-                  "href": "http://private-555da-byboxstockonnectapi.apiary-mock.com/Users?identifier=DO001&page=1"
-                },
-                "page": {
-                  "href": "http://private-555da-byboxstockonnectapi.apiary-mock.com/Users{?identifier,barcode,orderReference,door,suspended,page}",
-                  "templated": true
-                },
-                "users": {
-                  "href": "http://private-555da-byboxstockonnectapi.apiary-mock.com/Users{?identifier,barcode,orderReference,door,suspended,page}",
-                  "templated": true
-                },
-                "user": [
-                  {
-                    "href": "http://private-555da-byboxstockonnectapi.apiary-mock.com/Users/DJ001"
-                  },
-                  {
-                    "href": "http://private-555da-byboxstockonnectapi.apiary-mock.com/Users/DJ0011"
-                  }
-                ]
-              },
-              "_embedded": {
-                "user": [
-                  {
-                    "identifier": "DJ001",
-                    "username": "d.f.jones",
-                    "firstName": "Danny",
-                    "lastName": "Jones",
-                    "email": "email@address.com",
-                    "role": "user",
-                    "isSuspended": false,
-                    "_links": {
-                      "self": {
-                        "href": "http://private-555da-byboxstockonnectapi.apiary-mock.com/Users/DJ001/"
-                      }
-                    }
-                  },
-                  {
-                    "identifier": "DJ0011",
-                    "username": "d.x.jones",
-                    "firstName": "David",
-                    "lastName": "Jones",
-                    "email": "email@address.com",
-                    "role": "user",
-                    "isSuspended": false,
-                    "_links": {
-                      "self": {
-                        "href": "http://private-555da-byboxstockonnectapi.apiary-mock.com/Users/DJ0011/"
-                      }
-                    }
-                  },
-                ]
-              }
-          }
-      
-## /Users/{identifier}
-
-### GET [GET]
-
-Gets the single `User` identified by the specified `identifier`
-
-+ Parameters
-
-    + `identifier` -- The value used to uniquely identify the `User`
-    
-+ Response 200 (application/hal+json; charset=utf-8)
-
-            {
-              "user": {
-                "identifier": "DJ001",
-                "username": "d.f.jones",
-                "firstName": "Danny",
-                "lastName": "Jones",
-                "email": "email@address.com",
-                "role": "user",
-                "isSuspended": false,
-                "_links": {
-                  "self": {
-                    "href": "http://private-555da-byboxstockonnectapi.apiary-mock.com/Users/DJ001/"
-                  }
-                }
-              }
-            }
-
-+ Request (application/hal+json)
-
-    ##### This request is to simulate the use of an invalid Bearer token.
-
-    + Headers
-
-            Authorization: Bearer INVALID-BEARER-TOKEN
-
-    + Body
-
-            {
-            }
-
-+ Response 401 (text/plain; charset=utf-8)
-
-### UPDATE [PUT]
-
-Updates an existing `User` with the supplied `identifier`. All existing values for the user will be updated with the values supplied in the request
-
-+ Request (application/json)
-    
-    ##### The following defines the body specification for the `PUT` request.
-    + `identifier` (string) - The value that uniquely identifies a `User`
-    + `username` (string) -- The `username` associated with the `User`.
-    + `firstName` (string) -- The `firstName` associated with the `User`.
-    + `lastName` (string) -- The `lastName` associated with the `User`.
-    + `email` (string) -- The `email` associated with the `User`.
-    + `role` (enum[string]) - The role the user has
-        + Members
-            + `user`
-            + `admin`
-            + `readonly admin`
-    + `isSuspended` (bool) -- If the user can sign in an perform actions in the system
-     
-    + Headers
-
-            Authorization: Bearer BEARER-TOKEN-FROM-AUTHN-API
-
-    + Body
-
-            {
-                "identifier": "DJ001",
-                "username": "d.f.jones",
-                "firstName": "Danny",
-                "lastName": "Jones",
-                "email": "email@address.com",
-                "role": "admin",
-                "isSuspended": false
-            }
-
-+ Response 200 (application/json; charset=utf-8)
-This is returned when the `User` was accepted for update.
-    
-    + Body
-    
-+ Response 409 (application/json; charset=utf-8)
-This is returned when the `identifier` specified in the body is already is use.
-   
-    + Body
-    
-+ Response 404  (application/json; charset=utf-8)
-This is returned when the `identifier` specified in the uri doesn't match an existing `User` 
-   
-    + Body
-    
-+ Request (application/json)
-
-    ##### This request is to simulate the use of an invalid Bearer token.
-
-    + Headers
-
-            Authorization: Bearer INVALID-BEARER-TOKEN
-
-    + Body
-
-            {
-            }
-
-+ Response 401 (text/plain; charset=utf-8)
-
-+ Request (application/json)
-
-    ##### This request is to simulate the use of an invalid body.
-
-    + Headers
-
-            Authorization: Bearer BEARER-TOKEN-FROM-AUTHN-API
-
-    + Body
-
-            {
-            }
-
-+ Response 400 (text/plain; charset=utf-8)
-
-## /Users/{identifier}/Packages
-
-### ASSIGN [POST]
-
-Assigns the collection of a specifed `Package` from a specified `Location` to a particular `User`. In instances where the
-specified `User` does not already have access to the `Location` then access will be automatically granted and the `User` will receive
-temporary keys for the `Location.` After the `Package` has been collected this temporary access will be revoked.
-
-+ parameters
-
-    + `identifier` (string) -- The unique `identifier` that defines the `User` that will collect the `Package`.
-
-+ Request (application/json)
-
-    + `barcode` (string) - The `barcode` of the `Package` to assign
-    + `location` (string) -- The `identifier` that defines the `Location` from which the `Package` will be collected.
-    + `preAdvise` (bool) -- If the `Package` is not currently at the location, set the `Package` to the `User` when it arrives at the `Location`
-    
-    + Headers
-
-            Authorization: Bearer BEARER-TOKEN-FROM-AUTHN-API
-
-    + Body
-
-            {
-                "barcode": "ABC12345SBS",
-                "location": "LOCATION-2",
-                "preAdvise": false
-            }
-
-+ Response 200 (application/json; charset=utf-8)
-This status is returned when the request was accepted for processing.
-
-    + Body
-
-+ Response 404 (application/json; charset=utf-8)
-This status is returned when the request was structurally valid but the specified `user` or `location` does not exist.
-
-    + Body
-
-+ Request (application/json)
-
-    ##### This request is to simulate the use of an invalid Bearer token.
-
-    + Headers
-
-            Authorization: Bearer INVALID-BEARER-TOKEN
-
-    + Body
-
-            {
-            }
-
-+ Response 401 (text/plain; charset=utf-8)
-
-+ Request (application/json)
-
-    ##### This request is to simulate the use of an invalid body.
-
-    + Headers
-
-            Authorization: Bearer BEARER-TOKEN-FROM-AUTHN-API
-
-    + Body
-
-            {
-            }
-
-+ Response 400 (text/plain; charset=utf-8)
-
-### UNASSIGN [DELETE]
-
-Unassigns the collection of a specifed `Package` from a specified `Location` to a particular `User`. If the `User` was previously granted
-temporary access to `Location` then the unassignment process will revoke this access.
-
-+ parameters
-
-    + `identifier` (string) -- The unique `identifier` that defines the `User` that will no longer collect the `Package`.
-    
-+ Request (application/json)
-
-    + `barcode` (string) - The `barcode` of the `Package` to unassign
-    + `location` (string) -- The `identifier` that defines the `Location` from which the `Package` will be collected.
-    
-    + Headers
-
-            Authorization: Bearer BEARER-TOKEN-FROM-AUTHN-API
-
-    + Body
-
-            {
-                "barcode": "ABC12345SBS",
-                "location": "LOCATION-2",
-            }
-
-+ Response 200 (application/json; charset=utf-8)
-This status is returned when the request was accepted for processing
-
-    + Body
-
-+ Response 404 (application/json; charset=utf-8)
-This status is returned when the request was structurally valid but the specified `user` or `location` does not exist.
-
-    + Body
-
-+ Request (application/json)
-
-    ##### This request is to simulate the use of an invalid Bearer token.
-
-    + Headers
-
-            Authorization: Bearer INVALID-BEARER-TOKEN
-
-    + Body
-
-            {
-            }
-
-+ Response 401 (text/plain; charset=utf-8)
-
-+ Request (application/json)
-
-    ##### This request is to simulate the use of an invalid body.
-
-    + Headers
-
-            Authorization: Bearer BEARER-TOKEN-FROM-AUTHN-API
-
-    + Body
-
-            {
-            }
-
-+ Response 400 (text/plain; charset=utf-8)
-
-
-# Group Skus
-
-`Skus` are uniquely identified by their `identifier` and must also contain a `description` at the point of creation.
-`Skus` may be added to an `Order` for collection by a `User`.
-
-## /Skus
-
-### CREATE [POST]
-
-Creates a new `Sku` with the supplied `identifier` and `description`.
-
-+ Request (application/json)
-    
-    + identifier (string) - The value that uniqely identifies a `Sku`
-    + `description` (string) -- The `description` associated with the `sku`.
-
-    + Headers
-
-            Authorization: Bearer BEARER-TOKEN-FROM-AUTHN-API
-
-    + Body
-
-            {
-                "identifier": "MBA",
-                "description": "Macbook Air",
-            }
-
-+ Response 200 (application/json; charset=utf-8)
-This is returned when the `Sku` was accepted for creation.
-
-    + Body
-
-+ Response 409 (application/json; charset=utf-8)
-This is returned when the `identifier` specified is already is use.
-
-    + Body
-
-+ Request (application/json)
-
-    ##### This request is to simulate the use of an invalid Bearer token.
-
-    + Headers
-
-            Authorization: Bearer INVALID-BEARER-TOKEN
-
-    + Body
-
-            {
-            }
-
-+ Response 401 (text/plain; charset=utf-8)
-
-+ Request (application/json)
-
-    ##### This request is to simulate the use of an invalid body.
-
-    + Headers
-
-            Authorization: Bearer BEARER-TOKEN-FROM-AUTHN-API
-
-    + Body
-
-            {
-            }
-
-+ Response 400 (text/plain; charset=utf-8)
-
-## /Skus{?identifier,door,location,barcode,suspended,page}
-
-### SEARCH [GET]
-
-Searches for Skus matching the specified parameters
-
-+ Parameters
-    + identifier (string, optional) -- The value that uniquely identifies a `Sku`
-    + door (string, optional) -- The value that uniquely identifies a `Door`
-    + location (string, optional) -- The value that uniquely identifies a `Location`
-    + barcode (string, optional) -- The barcode of a package that has been assigned a sku
-    + suspended (boolean, optional) -- If the sku is suspended or not
-        + Default: `false`
-    + page (int, optional) -- The page of results to return
-        + Default: `1`
-
-+ Request (application/json)
-
-    + Headers
-
-            Authorization: Bearer BEARER-TOKEN-FROM-AUTHN-API
-
-    + Body
-
-            {
-                "identifier": "MBA",
-                "page": 1
-            }
-
-+ Response 200 (application/json; charset=utf-8)
-
-    + Body
-    
-            {
-              "totalResults": 2,
-              "totalPages": 1,
-              "page": 1,
-              "_links": {
-                "self": {
-                  "href": "http://private-555da-byboxstockonnectapi.apiary-mock.com/Skus?identifier=MBA&page=1"
-                },
-                "page": {
-                  "href": "http://private-555da-byboxstockonnectapi.apiary-mock.com/Skus{?identifier,door,barcode,suspended,page}",
-                  "templated": true
-                },
-                "skus": {
-                  "href": "http://private-555da-byboxstockonnectapi.apiary-mock.com/Users{?identifier,door,barcode,suspended,page}",
-                  "templated": true
-                },
-                "sku": [
-                  {
-                    "href": "http://private-555da-byboxstockonnectapi.apiary-mock.com/Skus/MBA"
-                  },
-                  {
-                    "href": "http://private-555da-byboxstockonnectapi.apiary-mock.com/Skus/MBA2016"
-                  }
-                ]
-              },
-              "_embedded": {
-                "sku": [
-                  {
-                    "identifier": "MBA",
-                    "description": "Macbook Air",
-                    "packages": [
-                        {
-                            "Location": "L002",
-                            "Door": "D001",
-                            "Barcode": "12345ABS"
-                        }
-                    ],
-                    "isSuspended": false,
-                    "_links": {
-                      "self": {
-                        "href": "http://private-555da-byboxstockonnectapi.apiary-mock.com/Users/MBA/"
-                      }
-                    }
-                  },
-                  {
-                    "identifier": "MBA216",
-                    "description": "Macbook Air 2016",
-                    "packages": [
-                        {
-                            "Location": "L002",
-                            "Door": "D002",
-                            "Barcode": "2828282"
-                        }
-                    ],
-                    "isSuspended": false,
-                    "_links": {
-                      "self": {
-                        "href": "http://private-555da-byboxstockonnectapi.apiary-mock.com/Skus/MBA2016/"
-                      }
-                    }
-                  }
-                ]
-              }
-            }
-      
-## /Skus/{identifier}
-
-### GET [GET]
-
-Returns the `Sku` that has the specified `identifier`.
-
-+ Parameters
-    + identifier (string) - The `identifier` of the `Sku` to return
-    
-+ Request (application/json)
-
-    + Headers
-
-            Authorization: Bearer BEARER-TOKEN-FROM-AUTHN-API
-
-    + Body
-    
-            {
-            }
-
-+ Response 200 (application/json; charset=utf-8)
-
-    + Body
-    
-            {
-                "identifier": "MBA",
-                "description": "Macbook Air",
-                "packages": [
-                   {
-                     "Location": "L002",
-                     "Door": "D001",
-                     "Barcode": "12345ABS"
-                    }
-                ],
-                "isSuspended": false,
-                "_links": {
-                    "self": {
-                    "href": "http://private-555da-byboxstockonnectapi.apiary-mock.com/Users/MBA/"
-                }
-            }
-
-+ Response 404 (application/json; charset=utf-8)
-This is returned when the  `identifier` specified does not exist.
-
-    + Body
-
-### UPDATE [PUT]
-
-Updates an existing sku `Sku` with the supplied `identifier`.
-
-+ Parameters
-
-    + `identifier` (string) -- The value that uniquely identifies a `Sku`
-    
-+ Request (application/json)
-
-    + `identifier` (string) - The value that uniqely identifies a `Sku`
-    + `description` (string) -- The `description` associated with the `sku`.
-
-    + Headers
-
-            Authorization: Bearer BEARER-TOKEN-FROM-AUTHN-API
-
-    + Body
-
-            {
-                "identifier": "MBA",
-                "description": "Macbook Air",
-            }
-
-+ Response 200 (application/json; charset=utf-8)
-This is returned when the `Sku` was accepted for update.
-
-    + Body
-    
-+ Response 404 (application/json; charset=utf-8)
-This is returned when the  `identifier` specified does not exist.
-
-    + Body
-
-+ Request (application/json)
-
-    ##### This request is to simulate the use of an invalid Bearer token.
-
-    + Headers
-
-            Authorization: Bearer INVALID-BEARER-TOKEN
-
-    + Body
-
-            {
-            }
-
-+ Response 401 (text/plain; charset=utf-8)
-
-+ Request (application/json)
-
-    ##### This request is to simulate the use of an invalid body.
-
-    + Headers
-
-            Authorization: Bearer BEARER-TOKEN-FROM-AUTHN-API
-
-    + Body
-
-            {
-            }
-
-+ Response 400 (text/plain; charset=utf-8)
-
-## /Skus/{identifier}/Packages
-
-### ASSIGN [POST]
-
-Assigns the specifed `Sku` to a `Package` at a particular `Location`.
-
-+ Parameters
-    + identifier (string) - The `identifier` of the `Sku` to assign
-
-+ Request (application/json)
-
-    ##### The following defines the body specification for the `Assign` `POST` request.
-    + `location` (string) -- The `identifier` of the `Location` that contains the `Package` to assign to the `Sku`.
-    + `barcode` (string) -- The barcode of the `Package` to assign to the `Sku`.
-    + `preAdvise` (bool) -- If the `Package` is not currently in the location, set the `Package` to the `Sku` when it arrives at the `Location`
-    
-    + Headers
-
-            Authorization: Bearer BEARER-TOKEN-FROM-AUTHN-API
-
-    + Body
-
-            {
-                "location": "LOCATION-1",
-                "barcode": "ABC1234ABS"
-            }
-
-+ Response 200 (application/json; charset=utf-8)
-This status is returned when the `Assign` request was accepted for processing.
-
-    + Body
-
-+ Response 404 (application/json; charset=utf-8)
-This status is returned when the `identifier` of the sku, or the specified `location` or `barcode` does not exist.
-
-    + Body
-
-+ Request (application/json)
-
-    ##### This request is to simulate the use of an invalid Bearer token.
-
-    + Headers
-
-            Authorization: Bearer INVALID-BEARER-TOKEN
-
-    + Body
-
-            {
-            }
-
-+ Response 401 (text/plain; charset=utf-8)
-
-+ Request (application/json)
-
-    ##### This request is to simulate the use of an invalid body.
-
-    + Headers
-
-            Authorization: Bearer BEARER-TOKEN-FROM-AUTHN-API
-
-    + Body
-
-            {
-            }
-
-+ Response 400 (text/plain; charset=utf-8)
-
-### UNASSIGN [DELETE]
-
-Unassigns the specifed `Sku` from a specified `Package` in the specified `Location`
-
-+ Parameters
-    + identifier (string) - The `identifier` of the `Sku` to unassign
-
-+ Request (application/json)
-    
-    + `location` (string) -- The `identifier` of the `Location` that contains the assigned package.
-    + `barcode` (string) -- The barcode of the `Package` to be unassigned
-
-    + Headers
-
-            Authorization: Bearer BEARER-TOKEN-FROM-AUTHN-API
-
-    + Body
-
-            {
-                "location": "LOCATION-1",
-                "barcode": "ABC12345ANS"
-            }
-
-+ Response 200 (application/json; charset=utf-8)
-This status is returned when the `Unassign` request was accepted for processing.
-
-    + Body
-
-+ Response 404 (application/json; charset=utf-8)
-This status is returned when the `identifier` of the sku, or the specified `location` or `barcode` does not exist.
-
-    + Body
-
-+ Request (application/json)
-
-    ##### This request is to simulate the use of an invalid Bearer token.
-
-    + Headers
-
-            Authorization: Bearer INVALID-BEARER-TOKEN
-
-    + Body
-
-            {
-            }
-
-+ Response 401 (text/plain; charset=utf-8)
-
-+ Request (application/json)
-
-    ##### This request is to simulate the use of an invalid body.
-
-    + Headers
-
-            Authorization: Bearer BEARER-TOKEN-FROM-AUTHN-API
-
-    + Body
-
-            {
-            }
-
-+ Response 400 (text/plain; charset=utf-8)
-
-# Group Orders
-
-`Orders` can be thought of as a grouping of `Skus` and\or `Packages` to be collected. The `Order` is "complete" when all `Skus` and `Packages` on the `Order`
-have been completed.
-
-## /Orders
-
-### CREATE [POST]
-
-Creates a new `Order` with the supplied `orderReference`.
-
-+ Request (application/json)
-
-    + `orderReference` (string) - The unique identifier of this `Order`
-    + `skus` (array[object], optional) -- A list of `items` by `sku` for creating the intial `Order`.
-        + `sku` (string) -- The `identifier` of the `sku` to be collected.
-        + `location` (string) -- The `identifier` of the `location` to collect from
-        + `quantity` (number) -- The numeric quantity of `sku` item.
-    + `packages` (array[object], optional) -- A list of `packages` by `barcode` for creating the intial `Order`.
-        + `barcode` (string) -- The `barcide` of the `package` to be collected.
-        + `location` (string) -- The `identifier` of the `location` to collect from
-        
-    + Headers
-
-            Authorization: Bearer BEARER-TOKEN-FROM-AUTHN-API
-
-    + Body
-
-            {
-                "skus": [
-                    {
-                        "sku": "SK123123123",
-                        "location": "LOC1",
-                        "quantity": 2
-                    }
-                ],
-                "packages": [
-                   {
-                        "barcode": "ABC12345ASN",
-                        "location": "LOC2"
-                   }
-                ]
-            }
-
-+ Response 200 (application/json; charset=utf-8)
-This is returned when the `Order` was accepted for creation.
-
-    + Body
-
-+ Response 409 (application/json; charset=utf-8)
-This is returned when the `orderReference` specified is already is use.
-
-    + Body
-    
-## /Orders{?orderReference,user,sku,location,cancelled,page}
-
-### SEARCH [GET]
-
-Returns all `Orders` that contain the specified parameters
-
-+ Parameters
-    + orderReference (string, optional) - The `Order` number
-    + user (string, optional) -- The `User` the `Order` is assigned to
-    + sku (string, optional) -- The `Sku` the `Order` contains
-    + location (string, optional) -- The `Location` the `Order` has items in
-    + cancelled (boolean, optional) -- If the `Order` is cancelled or not
-        + Default: `false`
-    + page (int, optional) -- The page of results to return
-        + Default: `1`
-    
-+ Request (application/json)
-
-    + Headers
-
-            Authorization: Bearer BEARER-TOKEN-FROM-AUTHN-API
-
-    + Body
-
-            {
-                "orderReference": "ORDEREF",
-                "page": 1
-            }
-
-+ Response 200 (application/json; charset=utf-8)
-
-    + Body
-    
-            {
-              "totalResults": 2,
-              "totalPages": 1,
-              "page": 1,
-              "_links": {
-                "self": {
-                  "href": "http://private-555da-byboxstockonnectapi.apiary-mock.com/Orders?orderReference=ORDERREF&page=1"
-                },
-                "page": {
-                  "href": "http://private-555da-byboxstockonnectapi.apiary-mock.com/Orders{?orderReference,user,sku,location,cancelled,page}",
-                  "templated": true
-                },
-                "orders": {
-                  "href": "http://private-555da-byboxstockonnectapi.apiary-mock.com/Orders{?orderReference,user,sku,location,cancelled,page}",
-                  "templated": true
-                },
-                "order": [
-                  {
-                    "href": "http://private-555da-byboxstockonnectapi.apiary-mock.com/Orders/ORDERREF1"
-                  },
-                  {
-                    "href": "http://private-555da-byboxstockonnectapi.apiary-mock.com/Orders/ORDERREF2"
-                  }
-                ]
-              },
-              "_embedded": {
-                "order": [
-                  {
-                        "orderReference": "ORDERREF1",
-                        "user": "DJ001",
-                        "isCancelled": false,
-                        "skus": [
-                            {
-                                "sku": "SK123123123",
-                                "location": "LOC1",
-                                "quantity": 2
-                            }
-                        ],
-                        "packages": [
-                           {
-                                "barcode": "ABC12345ASN",
-                                "location": "LOC2"
-                           }
-                        ],
-                        "_links": {
-                              "self": {
-                                "href": "http://private-555da-byboxstockonnectapi.apiary-mock.com/Orders/ORDERREF1/"
-                              }
-                            }
-                  },
-                  {
-                    "orderReference": "ORDERREF2",
-                        "user": "DJ001",
-                        "isCancelled": false,
-                        "skus": [
-                            {
-                                "sku": "SK123123123",
-                                "location": "LOC1",
-                                "quantity": 2
-                            }
-                        ],
-                        "packages": [
-                           {
-                                "barcode": "ABC12345ASN",
-                                "location": "LOC2"
-                           }
-                        ],
-                        "_links": {
-                              "self": {
-                                "href": "http://private-555da-byboxstockonnectapi.apiary-mock.com/Orders/ORDERREF2/"
-                              }
-                            }
-                  }
-                ]
-              }
-            }
-            
-## /Orders/{orderReference}/User
-
-### ASSIGN [POST]
-
-Assigns the `Order` specified by `orderReference` to the `User`. In instances where the
-specified `User` does not already have access to every `location` required to complete the `Order` then access will be automatically granted and the `User` will receive
-temporary keys for the `Location.` After each `Sku` and `Package` has been collected this temporary access will be revoked.
-
-+ Parameters
-    + orderReference (string) - The `Order` number
-
-+ Request (application/json)
-
-    + `user` (string) -- the `identifier` that defines the `User` to which the `Order` will be assigned.
-
-    + Headers
-
-            Authorization: Bearer BEARER-TOKEN-FROM-AUTHN-API
-
-    + Body
-
-            {
-                "user": "DJ001"
-            }
-
-+ Response 200 (application/json; charset=utf-8)
-This is returned when the `Assign` request was accepted for processing.
-
-    + Body
-
-+ Response 404 (application/json; charset=utf-8)
-This is returned when the `Assign` request was structurally valid but the specified `orderReference` or `user` does not exist.
-
-    + Body
-
-+ Request (application/json)
-
-    ##### This request is to simulate the use of an invalid Bearer token.
-
-    + Headers
-
-            Authorization: Bearer INVALID-BEARER-TOKEN
-
-    + Body
-
-            {
-            }
-
-+ Response 401 (text/plain; charset=utf-8)
-
-+ Request (application/json)
-
-    ##### This request is to simulate the use of an invalid body.
-
-    + Headers
-
-            Authorization: Bearer BEARER-TOKEN-FROM-AUTHN-API
-
-    + Body
-
-            {
-            }
-
-+ Response 400 (text/plain; charset=utf-8)
-
-### UNASSIGN [DELETE]
-
-Unassign an `Order` from the specified `User`. If the `User` was previously granted
-temporary access to any `Location` then the unassignment process will revoke this access.
-
-
-+ Parameters
-    + orderReference (string) - The `Order` reference
-
-+ Request (application/json)
-
-    ##### The following defines the body specification for the `Unassign` `POST` request.
-    + `user` (string) -- The `identifier` that defines the `User` from which the `Order` will be unassigned.
-
-    + Headers
-
-            Authorization: Bearer BEARER-TOKEN-FROM-AUTHN-API
-
-    + Body
-
-            {
-                "user": "DJ001"
-            }
-
-+ Response 200 (application/json; charset=utf-8)
-This is returned when the `Unassign` request was accepted for processing.
-
-    + Body
-
-+ Response 404 (application/json; charset=utf-8)
-This is returned when the `Unassign` request was structurally valid but the specified `orderReference` or `user` does not exist.
-
-    + Body
-
-+ Response 409 (application/json; charset=utf-8)
-This is returned when the `Order` is not currently assigned to a user.
-
-    + Body
-
-+ Request (application/json)
-
-    ##### This request is to simulate the use of an invalid Bearer token.
-
-    + Headers
-
-            Authorization: Bearer INVALID-BEARER-TOKEN
-
-    + Body
-
-            {
-            }
-
-+ Response 401 (text/plain; charset=utf-8)
-
-+ Request (application/json)
-
-    ##### This request is to simulate the use of an invalid body.
-
-    + Headers
-
-            Authorization: Bearer BEARER-TOKEN-FROM-AUTHN-API
-
-    + Body
-
-            {
-            }
-
-+ Response 400 (text/plain; charset=utf-8)
-
-## /Orders/{orderReference}/Skus
-
-### ASSIGN [POST]
-
-Adds skus to the specified `Order`. In instances where the `Order` has already been assigned and the
-specified `User` does not already have access to every `location` required to collect the specfied `items` then access will be automatically granted and the `User` will receive
-temporary keys for the required locations.
-
-+ Parameters
-    + orderReference (string) - The `Order` reference
-
-+ Request (application/json)
-
-    + `skus` (array[object], optional) -- A list of `items` by `sku` for creating the intial `Order`.
-        + `sku` (string) -- The `identifier` of the `sku` to be collected.
-        + `location` (string) -- The `identifier` of the `location` to collect from
-        + `quantity` (number) -- The numeric quantity of `sku` item.
-
-    + Headers
-
-            Authorization: Bearer BEARER-TOKEN-FROM-AUTHN-API
-
-    + Body
-
-            {
-                "skus": [
-                    {
-                        "sku": "SK321321321",
-                        "quantity": 2,
-                        "location": "LOCATION-1"
-                    }
-                ]
-            }
-
-+ Response 200 (application/json; charset=utf-8)
-This is returned when the request was accepted for processing.
-
-    + Body
-
-+ Response 404 (application/json; charset=utf-8)
-This is returned when the request is structurally valid but the `orderReference` does not exist.
-
-    + Body
-
-+ Request (application/json)
-
-    ##### This request is to simulate the use of an invalid Bearer token.
-
-    + Headers
-
-            Authorization: Bearer INVALID-BEARER-TOKEN
-
-    + Body
-
-            {
-            }
-
-+ Response 401 (text/plain; charset=utf-8)
-
-+ Request (application/json)
-
-    ##### This request is to simulate the use of an invalid body.
-
-    + Headers
-
-            Authorization: Bearer BEARER-TOKEN-FROM-AUTHN-API
-
-    + Body
-
-            {
-            }
-
-+ Response 400 (text/plain; charset=utf-8)
-
-### UNASSIGN [DELETE]
-
-Remove skus from the specified `Order`. In instances where the `Order` has already been assigned and the
-specified `User` has already been granted temporary access to every `location` required to collect the specified `skus`
-then the temporary access will be revoked.
-
-+ Parameters
-    + orderReference (string) - The `Order` number
-
-+ Request (application/json)
-
-    ##### The following defines the body specification for the `RemoveSkus` `POST` request.
-     + `skus` (array[object], optional) -- A list of `skus` to remove from the `Order`.
-        + `sku` (string) -- The `identifier` of the `sku` to be removed.
-        + `location` (string) -- The `identifier` of the `location` to remove from.
-        + `quantity` (number) -- The numeric quantity of `sku` items to remove.
-
-    + Headers
-
-            Authorization: Bearer BEARER-TOKEN-FROM-AUTHN-API
-
-    + Body
-
-            {
-                "skus": [
-                    {
-                        "sku": "SK321321321",
-                        "location": "LOCATION-1",
-                        "quantity": 2
-                    }
-                ]
-            }
-
-+ Response 200 (application/json; charset=utf-8)
-This is returned when the request was accepted for processing.
-
-    + Body
-
-+ Response 404 (application/json; charset=utf-8)
-This is returned when the  request is structurally valid but the `orderReference` does not exist.
-
-    + Body
-
-+ Request (application/json)
-
-    ##### This request is to simulate the use of an invalid Bearer token.
-
-    + Headers
-
-            Authorization: Bearer INVALID-BEARER-TOKEN
-
-    + Body
-
-            {
-            }
-
-+ Response 401 (text/plain; charset=utf-8)
-
-+ Request (application/json)
-
-    ##### This request is to simulate the use of an invalid body.
-
-    + Headers
-
-            Authorization: Bearer BEARER-TOKEN-FROM-AUTHN-API
-
-    + Body
-
-            {
-            }
-
-+ Response 400 (text/plain; charset=utf-8)
-
-## /Orders/{orderReference}/Packages
-
-### ASSIGN [POST]
-
-Adds package to the specified `Order`. In instances where the `Order` has already been assigned and the
-specified `User` does not already have access to every `Location` required to collect the specfied `packages` then access will be automatically granted and the `User` will receive
-temporary keys for the required locations.
-
-+ Parameters
-    + orderReference (string) - The `Order` reference
-
-+ Request (application/json)
-
-    + `packages` (array[object], optional) -- A list of `packages` by `barcode` to add to the `Order`.
-        + `barcode` (string) -- The `barcode` of the `package` to be collected.
-        + `location` (string) -- The `identifier` of the `location` to collect from
-
-    + Headers
-
-            Authorization: Bearer BEARER-TOKEN-FROM-AUTHN-API
-
-    + Body
-
-            {
-                "packages": [
-                    {
-                        "barcode": "SK321321321",
-                        "location": "LOCATION-1"
-                    }
-                ]
-            }
-
-+ Response 200 (application/json; charset=utf-8)
-This is returned when the request was accepted for processing.
-
-    + Body
-
-+ Response 404 (application/json; charset=utf-8)
-This is returned when the request is structurally valid but the `orderReference` does not exist.
-
-    + Body
-
-+ Request (application/json)
-
-    ##### This request is to simulate the use of an invalid Bearer token.
-
-    + Headers
-
-            Authorization: Bearer INVALID-BEARER-TOKEN
-
-    + Body
-
-            {
-            }
-
-+ Response 401 (text/plain; charset=utf-8)
-
-+ Request (application/json)
-
-    ##### This request is to simulate the use of an invalid body.
-
-    + Headers
-
-            Authorization: Bearer BEARER-TOKEN-FROM-AUTHN-API
-
-    + Body
-
-            {
-            }
-
-+ Response 400 (text/plain; charset=utf-8)
-
-### UNASSIGN [DELETE]
-
-Remove packages from the specified `Order`. In instances where the `Order` has already been assigned and the
-specified `User` has already been granted temporary access to every `Location` required to collect the specified `packages`
-then the temporary access will be revoked.
-
-+ Parameters
-    + orderReference (string) - The `Order` reference
-
-+ Request (application/json)
-
-   + `packages` (array[object], optional) -- A list of `packages` by `barcode` to remove from the `Order`.
-        + `barcode` (string) -- The `barcode` of the `package` to be removed.
-        + `location` (string) -- The `identifier` of the `location` where the `package` is located
-
-    + Headers
-
-            Authorization: Bearer BEARER-TOKEN-FROM-AUTHN-API
-
-    + Body
-
-            {
-                "packages": [
-                    {
-                        "barcode": "SK321321321",
-                        "location": "LOCATION-1"
-                    }
-                ]
-            }
-
-+ Response 200 (application/json; charset=utf-8)
-This is returned when the request was accepted for processing.
-
-    + Body
-
-+ Response 404 (application/json; charset=utf-8)
-This is returned when the request is structurally valid but the `orderReference` does not exist.
-
-    + Body
-
-+ Request (application/json)
-
-    ##### This request is to simulate the use of an invalid Bearer token.
-
-    + Headers
-
-            Authorization: Bearer INVALID-BEARER-TOKEN
-
-    + Body
-
-            {
-            }
-
-+ Response 401 (text/plain; charset=utf-8)
-
-+ Request (application/json)
-
-    ##### This request is to simulate the use of an invalid body.
-
-    + Headers
-
-            Authorization: Bearer BEARER-TOKEN-FROM-AUTHN-API
-
-    + Body
-
-            {
-            }
-
-+ Response 400 (text/plain; charset=utf-8)
-
-## /Orders/{orderReference}
-
-### GET [GET]
-
-Returns the details of the order matching the supplied `orderReference`
-
-+ Parameters
-    + orderReference (string) - The `Order` reference
-    
-+ Request (application/json)
-     + Headers
-
-            Authorization: Bearer BEARER-TOKEN-FROM-AUTHN-API
-
-    + Body
-
-            {
-            } 
-            
-+ Response 200 (application/hal; charset=utf-8)
-
-    + Body
-
-            {
-                "orderReference": "Order123",
-                "user": "DJ001",
-                "isCancelled": false,
-                "skus": [
-                    {
-                        "sku": "SK123123123",
-                        "location": "LOC1",
-                        "quantity": 2
-                    }
-                ],
-                "packages": [
-                   {
-                        "barcode": "ABC12345ASN",
-                        "location": "LOC2"
-                   }
-                ],
-                "_links": {
-                      "self": {
-                        "href": "http://private-555da-byboxstockonnectapi.apiary-mock.com/Orders/Order123/"
-                      }
-                    }
-            }
-            
-### UPDATE [PUT]
-
-Change the `Order` specified by `orderReference` to have the newly supplied reference number `newReParameters
-    + orderReference (string) - The `Order` reference
-
-+ Request (application/json)
-
-     + `orderReference` (string) -- A new reference number
-     + `isCancelled` (boolean) -- If the order is cancelled or not
-
-    + Headers
-
-            Authorization: Bearer BEARER-TOKEN-FROM-AUTHN-API
-
-
-    + Body
-
-            {
-                "orderReference": "NEWORDERREFERENCE1",
-                "isCancelled": false
-            }
-
-
-+ Response 200 (application/json; charset=utf-8)
-This is returned when the request was accepted for processing.
-
-    + Body
-
-+ Response 404 (application/json; charset=utf-8)
-This is returned when the `Order` specified by `orderReference` does not exist.
-
-    + Body
-
-+ Response 409 (application/json; charset=utf-8)
-This is returned when the new `orderReference` specified is already is use.
-
-    + Body
-
-+ Request (application/json)
-
-    ##### This request is to simulate the use of an invalid Bearer token.
-
-    + Headers
-
-            Authorization: Bearer INVALID-BEARER-TOKEN
-
-    + Body
-
-            {
-            }
-
-+ Response 401 (text/plain; charset=utf-8)
-
-+ Request (application/json)
-
-    ##### This request is to simulate the use of an invalid body.
-
-    + Headers
-
-            Authorization: Bearer BEARER-TOKEN-FROM-AUTHN-API
-
-    + Body
-
-            {
-            }
-
-+ Response 400 (text/plain; charset=utf-8)
-
-# Group Packages
-
-`Packages` are uniquely identified by their `barcode` and may go through various stages in their lifecyle, they may be delivered, collected, or returned.
-`Packages` may be directly assigned to a `User` or added to an `Order` to be collected. A `Package` may also be associated with a `Sku`.
-
-## /Packages{?location,page,pageSize}
-
-### SEARCH [GET]
-
-Returns a paged snapshot of all packages and their associated data. Results are sorted so that
-packages with the most recent activity are returned first.
-
-+ Parameters
-    + location (string, optional) - Filter by the location identifier
-    + page (number, optional) - The page of results to return.
-        + Default: `1`
-    + pageSize (number, optional) - The number of results to return per page. This may be subject to an upper limit but will be reflected in the `pageSize` value returned in the response body.
-        + Default: `50`
-
-+ Request (application/json; charset=utf-8)
-
-    + Headers
-
-            Authorization: Bearer BEARER-TOKEN-FROM-AUTHN-API
-
-+ Response 200 (application/json; charset=utf-8)
-
-            {
-              "totalResults": 100,
-              "totalPages": 4,
-              "page": 1,
-              "pageSize": 25,
-              "packages": [
-                  {
-                    "barcode": "201602180908080694086",
-                    "location": "L002"
-                    "door":  "DOOR-1"
-                    "scannedInDate": "2016-02-18T09:08:08.0694086+00:00",
-                    "user": "MW1"
-                  },
-                  {
-                    "barcode": "201602180908080694086",
-                    "location": "L002"
-                    "door":  "DOOR-1"
-                    "scannedInDate": "2016-02-18T09:08:08.0694086+00:00",
-                    "user": "MW1"
-                  }
-                ]
-            }
-
-+ Request (application/json)
-
-    ##### This request is to simulate the use of an invalid Bearer token.
-
-    + Headers
-
-            Authorization: Bearer INVALID-BEARER-TOKEN
-
-    + Body
-
-            {
-            }
-
-+ Response 401 (text/plain; charset=utf-8)
-
-## /Packages{?location,barcode}
-
-### GET [GET]
-
-Returns the `Package` identified by the specified `barcode` and `location` identifier.
-
-+ Parameters
-    + location (string) - The identifier of the `location` that the `Package` is currently in
-    + barcode (string) - The `barcode` of the `Package` to return.
-
-+ Request (application/json; charset=utf-8)
-
-    + Headers
-
-            Authorization: Bearer BEARER-TOKEN-FROM-AUTHN-API
-
-+ Response 200 (application/json; charset=utf-8)
-
-            {
-                "barcode": "201602180908080694086",
-                "location": "L002"
-                "door":  "DOOR-1"
-                "scannedInDate": "2016-02-18T09:08:08.0694086+00:00",
-                "user": "MW1"
-            }
-
-+ Request (application/json)
-
-    ##### This request is to simulate the use of an invalid Bearer token.
-
-    + Headers
-
-            Authorization: Bearer INVALID-BEARER-TOKEN
-
-    + Body
-
-            {
-            }
-
-+ Response 401 (text/plain; charset=utf-8)
-
-# Group Activity
-
-`Activity` generally represents a visit to a `Door` by a `User` and comprises of `unlocked`, `scannedIn`, `scannedOut`, and `locked` events.
-The activity also contains `notScannedOut` `barcodes`, these are items that a `User` should have scanned out but could not or would not.
-
-## /Activity{?page,pageSize}
-
-### GET [GET]
-
-Returns a paged snapshot of all activity. Results are sorted so that most recent activity is returned first.
-
-Since this endpoint supports [Hypermedia](https://en.wikipedia.org/wiki/Hypermedia) and returns `application/hal+json` it is
-simple to navigate programmatically through all pages to obtain a complete snapshot using the `_links` element.
-
-+ Parameters
-    + page (number, optional) - The page of results to return.
-        + Default: `1`
-    + pageSize (number, optional) - The number of results to return per page. This may be subject to an upper limit but will be reflected in the `pageSize` value returned in the response body.
-        + Default: `50`
-
-+ Request (application/hal+json; charset=utf-8)
-
-    + Headers
-
-            Authorization: Bearer BEARER-TOKEN-FROM-AUTHN-API
-
-+ Response 200 (application/hal+json; charset=utf-8)
-
-            {
-              "totalResults": 100,
-              "totalPages": 4,
-              "page": 1,
-              "pageSize": 25,
-              "_links": {
-                "self": {
-                  "href": "http://private-555da-byboxstockonnectapi.apiary-mock.com/Activity?page=2&pageSize=25"
-                },
-                "prev": {
-                  "href": "http://private-555da-byboxstockonnectapi.apiary-mock.com/Activity?page=1&pageSize=25"
-                },
-                "next": {
-                  "href": "http://private-555da-byboxstockonnectapi.apiary-mock.com/Activity?page=3&pageSize=25"
-                },
-                "page": {
-                  "href": "http://private-555da-byboxstockonnectapi.apiary-mock.com/Activity{?page,pageSize}",
-                  "templated": true
-                },
-                "activities": [
-                  {
-                    "href": "http://private-555da-byboxstockonnectapi.apiary-mock.com/Activity/201602180908080694086"
-                  },
-                  {
-                    "href": "http://private-555da-byboxstockonnectapi.apiary-mock.com/Activity/201602180815080684079"
-                  }
-                ]
-              },
-              "_embedded": {
-                "activity": [
-                  {
-                    "id": "201602180908080694086",
-                    "location": {
-                      "id": "COVENTRY",
-                      "name": "Coventry"
-                    },
-                    "door": {
-                      "id": "DOOR-1",
-                      "name": "Door 1"
-                    },
-                    "doorProfile": {
-                      "id": 1,
-                      "name": "Return"
-                    },
-                    "scannedIn": [
-                      "363003",
-                      "612084",
-                      "635673",
-                      "759074",
-                      "298681",
-                      "581501",
-                      "492596"
-                    ],
-                    "scannedOut": [
-                      "784353",
-                      "584084",
-                      "557613",
-                      "873799"
-                    ],
-                    "at": "2016-02-18T09:08:08.0694086+00:00",
-                    "by": {
-                      "id": "mark.woodhall",
-                      "name": "Mark Woodhall",
-                      "group": {
-                        "id": "BYBOX",
-                        "name": "ByBox"
-                      }
-                    },
-                    "carrier": null,
-                    "_links": {
-                      "self": {
-                        "href": "http://private-555da-byboxstockonnectapi.apiary-mock.com/Activity/201602180908080694086"
-                      }
-                    }
-                  },
-                  {
-                    "id": "201602180815080684079",
-                    "location": {
-                      "id": "COVENTRY",
-                      "name": "Coventry"
-                    },
-                    "door": {
-                      "id": "DOOR-1",
-                      "name": "Door 1"
-                    },
-                    "doorProfile": {
-                      "id": 1,
-                      "name": "Return"
-                    },
-                    "scannedIn": [
-                      "114292",
-                      "123460",
-                      "692850",
-                      "621688"
-                    ],
-                    "scannedOut": [
-                      "393996",
-                      "198807",
-                      "107977",
-                      "586586"
-                    ],
-                    "at": "2016-02-18T08:15:08.0684079+00:00",
-                    "by": {
-                      "id": "mark.woodhall",
-                      "name": "Mark Woodhall",
-                      "group": {
-                        "id": "BYBOX",
-                        "name": "ByBox"
-                      }
-                    },
-                    "carrier": null,
-                    "_links": {
-                      "self": {
-                        "href": "http://private-555da-byboxstockonnectapi.apiary-mock.com/Activity/201602180815080684079"
-                      }
-                    }
-                  }
-                ]
-              }
-            }
-
-+ Request (application/hal+json)
-
-    ##### This request is to simulate the use of an invalid Bearer token.
-
-    + Headers
-
-            Authorization: Bearer INVALID-BEARER-TOKEN
-
-    + Body
-
-            {
-            }
-
-+ Response 401 (text/plain; charset=utf-8)
-
-## /Activity/{id}
-
-### GET [GET]
-
-Returns the activity identified by the specified `id`.
-
-+ Parameters
-    + id (string) - The `id` of the activity to return.
-
-+ Request (application/hal+json; charset=utf-8)
-
-    + Headers
-
-            Authorization: Bearer BEARER-TOKEN-FROM-AUTHN-API
-
-+ Response 200 (application/hal+json; charset=utf-8)
-
-            {
-              "id": "201602180908080694086",
-              "location": {
-                "id": "COVENTRY",
-                "name": "Coventry"
-              },
-              "door": {
-                "id": "DOOR-1",
-                "name": "Door 1"
-              },
-              "doorProfile": {
-                "id": 1,
-                "name": "Return"
-              },
-              "scannedIn": [
-                "363003",
-                "612084",
-                "635673",
-                "759074",
-                "298681",
-                "581501",
-                "492596"
-              ],
-              "scannedOut": [
-                "784353",
-                "584084",
-                "557613",
-                "873799"
-              ],
-              "at": "2016-02-18T09:08:08.0694086+00:00",
-              "by": {
-                "id": "mark.woodhall",
-                "name": "Mark Woodhall",
-                "group": {
-                  "id": "BYBOX",
-                  "name": "ByBox"
-                }
-              },
-              "carrier": null,
-              "_links": {
-                "self": {
-                  "href": "http://private-555da-byboxstockonnectapi.apiary-mock.com/Activity/201602180908080694086"
-                }
-              }
-            }
-
-+ Request (application/hal+json)
-
-    ##### This request is to simulate the use of an invalid Bearer token.
-
-    + Headers
-
-            Authorization: Bearer INVALID-BEARER-TOKEN
-
-    + Body
-
-            {
-            }
-
-+ Response 401 (text/plain; charset=utf-8)
+swagger: '2.0'
+info:
+  version: v1
+  title: Stockonnect Partner API
+  description: A public API for partners to integrate with the ByBox Stockonnect System.
+host: test.bybox.com
+basePath: /Stockonnect/Api/PartnerApi
+schemes:
+  - http
+  - https
+paths:
+  /Skus:
+    get:
+      tags:
+        - Sku
+      summary: Searches for Skus matching the specified parameters
+      operationId: Sku_Search
+      consumes: []
+      produces:
+        - application/json
+        - text/json
+      parameters:
+        - name: searchTerm.identifier
+          in: query
+          required: false
+          type: string
+        - name: searchTerm.door
+          in: query
+          required: false
+          type: string
+        - name: searchTerm.location
+          in: query
+          required: false
+          type: string
+        - name: searchTerm.barcode
+          in: query
+          required: false
+          type: string
+        - name: searchTerm.suspended
+          in: query
+          required: false
+          type: boolean
+        - name: searchTerm.page
+          in: query
+          required: false
+          type: integer
+          format: int32
+      responses:
+        '200':
+          description: 'Search was successful, and results were returned'
+          schema:
+            $ref: '#/definitions/PagedList[SkuResultRepresentation]'
+        '400':
+          description: No search criteria specified
+        '500':
+          description: Returned in the case of an unexpected fault
+    put:
+      tags:
+        - Sku
+      summary: Updates an existing sku Sku with the supplied identifier.
+      operationId: Sku_Update
+      consumes:
+        - application/json
+        - text/json
+        - application/xml
+        - text/xml
+        - application/x-www-form-urlencoded
+      produces:
+        - application/json
+        - text/json
+        - application/xml
+        - text/xml
+      parameters:
+        - name: sku
+          in: body
+          description: ''
+          required: true
+          schema:
+            $ref: '#/definitions/UpdateSku'
+      responses:
+        '200':
+          description: Sku was accepted for update
+        '400':
+          description: Supplied identifier or description is missing
+        '404':
+          description: Identifier specified does not exist
+        '500':
+          description: Returned in the case of an unexpected fault
+    post:
+      tags:
+        - Sku
+      summary: Creates a new Sku with the supplied identifier and description
+      operationId: Sku_Create
+      consumes:
+        - application/json
+        - text/json
+        - application/xml
+        - text/xml
+        - application/x-www-form-urlencoded
+      produces:
+        - application/json
+        - text/json
+        - application/xml
+        - text/xml
+      parameters:
+        - name: sku
+          in: body
+          description: ''
+          required: true
+          schema:
+            $ref: '#/definitions/CreateSku'
+      responses:
+        '200':
+          description: Sku accepted for creation
+        '400':
+          description: Supplied identifier or description is missing
+        '409':
+          description: Identifier specified is already in use
+        '500':
+          description: Returned in the case of an unexpected fault
+  '/clients/{clientIdentifier}/Destinations/{destinationIdentifier}':
+    get:
+      tags:
+        - Destinations
+      summary: Gets a destination.
+      operationId: Destinations_GetDestinationWithClientIdentifier
+      consumes: []
+      produces:
+        - application/json
+        - text/json
+        - application/xml
+        - text/xml
+      parameters:
+        - name: clientIdentifier
+          in: path
+          description: The client Identifier to look the destination for
+          required: true
+          type: string
+        - name: destinationIdentifier
+          in: path
+          description: The destination Identifier to look for
+          required: true
+          type: string
+      responses:
+        '200':
+          description: Destionation accepted for processing
+          schema:
+            $ref: '#/definitions/DestinationRepresentation'
+        '403':
+          description: Not authorized to make the requested call
+        '404':
+          description: The destination was not found.
+        '500':
+          description: Returned in the case of an unexpected fault
+  '/users/{identifier}/packagecollectionassignments':
+    post:
+      tags:
+        - Users
+      summary: assign a package to a user
+      operationId: Users_AssignPackage
+      consumes:
+        - application/json
+        - text/json
+        - application/xml
+        - text/xml
+        - application/x-www-form-urlencoded
+      produces:
+        - application/json
+        - text/json
+        - application/xml
+        - text/xml
+      parameters:
+        - name: identifier
+          in: path
+          required: true
+          type: string
+        - name: assignment
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/PackageCollectionAssignment'
+      responses:
+        '200':
+          description: OK
+          schema:
+            type: object
+        '202':
+          description: Accepted the assignment of a package for collection by the user
+        '403':
+          description: Not authorized to make the requested call
+        '404':
+          description: >-
+            Unable to find one or more of the requested user, location or
+            package
+        '500':
+          description: Returned in the case of an unexpected fault
+    delete:
+      tags:
+        - Users
+      summary: Unassign a package from a user
+      operationId: Users_UnassignPackage
+      consumes: []
+      produces:
+        - application/json
+        - text/json
+        - application/xml
+        - text/xml
+      parameters:
+        - name: identifier
+          in: path
+          description: ''
+          required: true
+          type: string
+        - name: unassignment.barcode
+          in: query
+          required: false
+          type: string
+        - name: unassignment.locationIdentifier
+          in: query
+          required: false
+          type: string
+      responses:
+        '200':
+          description: OK
+          schema:
+            type: object
+        '202':
+          description: Accepted the unassignment of a package for collection by the user
+        '403':
+          description: Not authorized to make the requested call
+        '404':
+          description: >-
+            Unable to find one or more of the requested user, location or
+            package
+        '500':
+          description: Returned in the case of an unexpected fault
+  '/users/{identifier}':
+    get:
+      tags:
+        - Users
+      summary: get a users details via their identifier within the callers group id
+      operationId: Users_ByIdentifier
+      consumes: []
+      produces:
+        - application/json
+        - text/json
+        - application/xml
+        - text/xml
+      parameters:
+        - name: identifier
+          in: path
+          description: the unique (within group) identifier for the user to be found
+          required: true
+          type: string
+      responses:
+        '200':
+          description: Found the user
+          schema:
+            $ref: '#/definitions/UserRepresentation'
+        '403':
+          description: Not authorized to make the requested call
+        '404':
+          description: >-
+            Unable to find the user for the given identifier within the group
+            associated with the caller
+        '500':
+          description: Returned in the case of an unexpected fault
+  '/Skus/{identifier}':
+    get:
+      tags:
+        - Sku
+      summary: Returns the Sku that has the specified identifier.
+      operationId: Sku_Get
+      consumes: []
+      produces:
+        - application/json
+        - text/json
+        - application/xml
+        - text/xml
+      parameters:
+        - name: identifier
+          in: path
+          description: ''
+          required: true
+          type: string
+      responses:
+        '200':
+          description: Returned the sku that has the specified identifier
+          schema:
+            $ref: '#/definitions/SkuResultRepresentation'
+        '404':
+          description: Identifier specified does not exist
+        '500':
+          description: Returned in the case of an unexpected fault
+  /Orders/job:
+    post:
+      tags:
+        - Orders
+      summary: Creates a new job order with the supplied order reference.
+      operationId: Orders_CreateJobOrder
+      consumes:
+        - application/json
+        - text/json
+        - application/xml
+        - text/xml
+        - application/x-www-form-urlencoded
+      produces:
+        - application/json
+        - text/json
+        - application/xml
+        - text/xml
+      parameters:
+        - name: jobOrder
+          in: body
+          description: The details for the job order to be created.
+          required: true
+          schema:
+            $ref: '#/definitions/JobOrderRepresentation'
+      responses:
+        '200':
+          description: Order accepted for processing
+          schema:
+            $ref: '#/definitions/JobOrderRepresentation'
+        '400':
+          description: >-
+            The supplied order failed validation due to invalid fields and/or
+            missing mandatory fields.  Details of the validation failure(s) will
+            be returned in the response.
+        '403':
+          description: Not authorized to make the requested call
+        '409':
+          description: The supplied order reference is already in use.
+        '500':
+          description: Returned in the case of an unexpected fault
+  /Orders/tech:
+    post:
+      tags:
+        - Orders
+      summary: Creates a new tech order with the supplied order reference.
+      operationId: Orders_CreateTechOrder
+      consumes:
+        - application/json
+        - text/json
+        - application/xml
+        - text/xml
+        - application/x-www-form-urlencoded
+      produces:
+        - application/json
+        - text/json
+        - application/xml
+        - text/xml
+      parameters:
+        - name: techOrder
+          in: body
+          description: The details for the tech order to be created.
+          required: true
+          schema:
+            $ref: '#/definitions/TechOrderRepresentation'
+      responses:
+        '200':
+          description: Order accepted for processing
+          schema:
+            $ref: '#/definitions/TechOrderRepresentation'
+        '400':
+          description: >-
+            The supplied order failed validation due to invalid fields and/or
+            missing mandatory fields.  Details of the validation failure(s) will
+            be returned in the response.
+        '403':
+          description: Not authorized to make the requested call
+        '409':
+          description: The supplied order reference is already in use.
+        '500':
+          description: Returned in the case of an unexpected fault
+  '/clients/{clientIdentifier}/destinations/{destinationIdentifier}':
+    put:
+      tags:
+        - Destinations
+      summary: Updates an existing destination.
+      operationId: Destinations_UpdateDestinationWithClientIdentifier
+      consumes:
+        - application/json
+        - text/json
+        - application/xml
+        - text/xml
+        - application/x-www-form-urlencoded
+      produces:
+        - application/json
+        - text/json
+        - application/xml
+        - text/xml
+      parameters:
+        - name: createLocationArgs
+          in: body
+          description: The details for the destination to be created.
+          required: true
+          schema:
+            $ref: '#/definitions/DestinationRepresentation'
+        - name: clientIdentifier
+          in: path
+          description: The client Identifier to update the destination for
+          required: true
+          type: string
+        - name: destinationIdentifier
+          in: path
+          required: true
+          type: string
+      responses:
+        '200':
+          description: Destionation accepted for processing
+          schema:
+            $ref: '#/definitions/DestinationRepresentation'
+        '400':
+          description: >-
+            The supplied destination failed validation due to invalid fields
+            and/or missing mandatory fields.  Details of the validation
+            failure(s) will be returned in the response.
+        '403':
+          description: Not authorized to make the requested call
+        '409':
+          description: The supplied destination reference is already in use.
+        '500':
+          description: Returned in the case of an unexpected fault
+  '/clients/{clientIdentifier}/skus/{skuIdentifier}/doors':
+    get:
+      tags:
+        - Sku
+      summary: Returns the doors to assigned to a specified SKU.
+      operationId: Sku_GetDoorsWithClientIdentifier
+      consumes: []
+      produces:
+        - application/json
+        - text/json
+        - application/xml
+        - text/xml
+      parameters:
+        - name: clientIdentifier
+          in: path
+          required: true
+          type: string
+        - name: skuIdentifier
+          in: path
+          required: true
+          type: string
+        - name: page
+          in: query
+          required: false
+          type: integer
+          format: int32
+      responses:
+        '200':
+          description: Returned the doors to assigned to a specified SKU
+          schema:
+            $ref: '#/definitions/PagedList[SkuDoorAssignmentRepresentation]'
+        '404':
+          description: SKU with specified identifier does not exist
+        '500':
+          description: Returned in the case of an unexpected fault
+  '/clients/{clientIdentifier}/skus/{skuIdentifier}/locations':
+    get:
+      tags:
+        - Sku
+      summary: >-
+        Finds the available quantities of a SKU by location, optionally
+        filtering results.
+      operationId: Sku_LocationSearch
+      consumes: []
+      produces:
+        - application/json
+        - text/json
+      parameters:
+        - name: clientIdentifier
+          in: path
+          description: The identifier of the client that owns the SKU.
+          required: true
+          type: string
+        - name: skuIdentifier
+          in: path
+          description: The identifier for the SKU.
+          required: true
+          type: string
+        - name: criteria.clientIdentifier
+          in: query
+          required: false
+          type: string
+        - name: criteria.skuIdentifier
+          in: query
+          required: false
+          type: string
+        - name: criteria.radiusFilter.longitude
+          in: query
+          required: false
+          type: number
+          format: double
+        - name: criteria.radiusFilter.latitude
+          in: query
+          required: false
+          type: number
+          format: double
+        - name: criteria.radiusFilter.searchRadiusKm
+          in: query
+          required: false
+          type: number
+          format: double
+        - name: criteria.page
+          in: query
+          required: false
+          type: integer
+          format: int32
+      responses:
+        '200':
+          description: 'Search was successful, and results were returned'
+          schema:
+            $ref: '#/definitions/PagedList[SkuLocationSearchResultRepresentation]'
+        '400':
+          description: No search criteria specified or invalid client identifier given
+        '500':
+          description: Returned in the case of an unexpected fault
+  '/location/{locationIdentifier}/doors/{doorIdentifier}/packages/{barcode}':
+    get:
+      tags:
+        - Packages
+      summary: >-
+        Returns the Package identified by the specified barcode and location
+        identifier.
+      operationId: Packages_Get
+      consumes: []
+      produces:
+        - application/json
+        - text/json
+        - application/xml
+        - text/xml
+      parameters:
+        - name: locationIdentifier
+          in: path
+          required: true
+          type: string
+        - name: doorIdentifier
+          in: path
+          required: true
+          type: string
+        - name: barcode
+          in: path
+          required: true
+          type: string
+      responses:
+        '200':
+          description: >-
+            Returned the package identified by the specified barcode, location
+            identifier and door identifier
+          schema:
+            $ref: '#/definitions/PackageResultRepresentation'
+        '404':
+          description: Identifier specified does not exist
+        '500':
+          description: Returned in the case of an unexpected fault
+  /users:
+    get:
+      tags:
+        - Users
+      summary: search for one or more users
+      operationId: Users_Search
+      consumes: []
+      produces:
+        - application/json
+        - text/json
+        - application/xml
+        - text/xml
+      parameters:
+        - name: searchArgs.identifier
+          in: query
+          required: false
+          type: string
+        - name: searchArgs.username
+          in: query
+          required: false
+          type: string
+        - name: searchArgs.barcode
+          in: query
+          required: false
+          type: string
+        - name: searchArgs.orderReference
+          in: query
+          required: false
+          type: string
+        - name: searchArgs.doorName
+          in: query
+          required: false
+          type: string
+        - name: searchArgs.locationName
+          in: query
+          required: false
+          type: string
+        - name: searchArgs.suspended
+          in: query
+          required: false
+          type: boolean
+        - name: searchArgs.page
+          in: query
+          required: false
+          type: integer
+          format: int32
+        - name: searchArgs.pageSize
+          in: query
+          required: false
+          type: integer
+          format: int32
+      responses:
+        '200':
+          description: Found and returned a result
+          schema:
+            $ref: '#/definitions/UserListRepresentation'
+        '403':
+          description: Not authorized to make the requested call
+        '404':
+          description: Search parameters returned no result
+        '500':
+          description: Returned in the case of an unexpected fault
+    put:
+      tags:
+        - Users
+      summary: Update an existing User
+      operationId: Users_UpdateUser
+      consumes:
+        - application/json
+        - text/json
+        - application/xml
+        - text/xml
+        - application/x-www-form-urlencoded
+      produces:
+        - application/json
+        - text/json
+        - application/xml
+        - text/xml
+      parameters:
+        - name: userDetails
+          in: body
+          description: ''
+          required: true
+          schema:
+            $ref: '#/definitions/UserRepresentation'
+      responses:
+        '200':
+          description: OK
+          schema:
+            type: object
+        '202':
+          description: User update request accepted
+        '400':
+          description: >-
+            The supplied user details has missing mandatory fields or user to be
+            updated doesn't exist
+        '403':
+          description: Not authorized to make the requested call
+        '409':
+          description: >-
+            The supplied user details had either a duplicate username,
+            identifier or both
+        '500':
+          description: Returned in the case of an unexpected fault
+    post:
+      tags:
+        - Users
+      summary: Create a new user
+      operationId: Users_CreateUser
+      consumes:
+        - application/json
+        - text/json
+        - application/xml
+        - text/xml
+        - application/x-www-form-urlencoded
+      produces:
+        - application/json
+        - text/json
+        - application/xml
+        - text/xml
+      parameters:
+        - name: userDetails
+          in: body
+          description: the details for the user to be created
+          required: true
+          schema:
+            $ref: '#/definitions/UserRepresentation'
+        - name: selfManageActivation
+          in: query
+          description: >-
+            if set to true the activation code will not be generated and the
+            user activation email will not be sent to the user
+          required: false
+          type: boolean
+      responses:
+        '200':
+          description: OK
+          schema:
+            type: object
+        '202':
+          description: User creation request accepted
+        '400':
+          description: >-
+            The supplied user details has missing mandatory fields or activation
+            code generation failed
+        '403':
+          description: Not authorized to make the requested call
+        '409':
+          description: >-
+            The supplied user details had either a duplicate username,
+            identifier or both
+        '500':
+          description: Returned in the case of an unexpected fault
+  '/Orders/{orderReference}/user':
+    post:
+      tags:
+        - Orders
+      summary: Assigns the user to the order.
+      operationId: Orders_AssignUser
+      consumes:
+        - application/json
+        - text/json
+        - application/xml
+        - text/xml
+        - application/x-www-form-urlencoded
+      produces:
+        - application/json
+        - text/json
+        - application/xml
+        - text/xml
+      parameters:
+        - name: orderReference
+          in: path
+          description: ''
+          required: true
+          type: string
+        - name: userIdentifier
+          in: body
+          description: ''
+          required: true
+          schema:
+            $ref: '#/definitions/UserIdentifierRepresentation'
+      responses:
+        '200':
+          description: The assign request was accepted for processing.
+          schema:
+            $ref: '#/definitions/UserIdentifierRepresentation'
+        '400':
+          description: The supplied order or user was not found.
+        '403':
+          description: Not authorized to make the requested call
+        '500':
+          description: Returned in the case of an unexpected fault
+    delete:
+      tags:
+        - Orders
+      summary: Unassigns the user from the order.
+      operationId: Orders_UnassignUser
+      consumes:
+        - application/json
+        - text/json
+        - application/xml
+        - text/xml
+        - application/x-www-form-urlencoded
+      produces:
+        - application/json
+        - text/json
+        - application/xml
+        - text/xml
+      parameters:
+        - name: orderReference
+          in: path
+          description: ''
+          required: true
+          type: string
+        - name: userIdentifier
+          in: body
+          description: ''
+          required: true
+          schema:
+            $ref: '#/definitions/UserIdentifierRepresentation'
+      responses:
+        '200':
+          description: The unassign request was accepted for processing.
+          schema:
+            $ref: '#/definitions/UserIdentifierRepresentation'
+        '400':
+          description: The supplied order or user was not found.
+        '403':
+          description: Not authorized to make the requested call
+        '500':
+          description: Returned in the case of an unexpected fault
+  '/users/{identifier}/activationcode':
+    get:
+      tags:
+        - Users
+      summary: >-
+        generate an activation code for a user that hasn't already got an
+        activation code
+      operationId: Users_GetActivationCode
+      consumes: []
+      produces:
+        - application/json
+        - text/json
+        - application/xml
+        - text/xml
+      parameters:
+        - name: identifier
+          in: path
+          description: the identifier of the user to create an activation code for
+          required: true
+          type: string
+      responses:
+        '200':
+          description: OK
+          schema:
+            type: object
+        '202':
+          description: Generated an activation code
+        '400':
+          description: >-
+            The supplied user identifier was invalid or the user already has an
+            activation code
+        '403':
+          description: Not authorized to make the requested call
+        '500':
+          description: Returned in the case of an unexpected fault
+  '/Orders/{orderReference}':
+    get:
+      tags:
+        - Orders
+      summary: search for orders using the specified parameters
+      operationId: Orders_GetOrder
+      consumes: []
+      produces:
+        - application/json
+        - text/json
+        - application/xml
+        - text/xml
+      parameters:
+        - name: orderReference
+          in: path
+          description: The order identifier
+          required: true
+          type: string
+      responses:
+        '200':
+          description: Found and returned a result
+          schema:
+            $ref: '#/definitions/OrderSearchResult'
+        '403':
+          description: Not authorized to make the requested call
+        '404':
+          description: Order not found
+        '500':
+          description: Returned in the case of an unexpected fault
+    delete:
+      tags:
+        - Orders
+      summary: search for orders using the specified parameters
+      operationId: Orders_CancelOrder
+      consumes: []
+      produces:
+        - application/json
+        - text/json
+        - application/xml
+        - text/xml
+      parameters:
+        - name: orderReference
+          in: path
+          description: The order identifier
+          required: true
+          type: string
+      responses:
+        '200':
+          description: Cancelled the order
+        '403':
+          description: Not authorized to make the requested call
+        '404':
+          description: Order not found
+        '500':
+          description: Returned in the case of an unexpected fault
+  /Orders/inventory:
+    post:
+      tags:
+        - Orders
+      summary: Creates a new inventory order with the supplied order reference.
+      operationId: Orders_CreateInventoryOrder
+      consumes:
+        - application/json
+        - text/json
+        - application/xml
+        - text/xml
+        - application/x-www-form-urlencoded
+      produces:
+        - application/json
+        - text/json
+        - application/xml
+        - text/xml
+      parameters:
+        - name: inventoryOrder
+          in: body
+          description: The details for the inventory order to be created.
+          required: true
+          schema:
+            $ref: '#/definitions/InventoryOrderRepresentation'
+      responses:
+        '200':
+          description: Order accepted for processing
+          schema:
+            $ref: '#/definitions/InventoryOrderRepresentation'
+        '400':
+          description: >-
+            The supplied order failed validation due to invalid fields and/or
+            missing mandatory fields.  Details of the validation failure(s) will
+            be returned in the response.
+        '403':
+          description: Not authorized to make the requested call
+        '409':
+          description: The supplied order reference is already in use.
+        '500':
+          description: Returned in the case of an unexpected fault
+  '/clients/{clientIdentifier}/Orders/{orderReference}':
+    get:
+      tags:
+        - Orders
+      summary: search for orders using the specified parameters
+      operationId: Orders_GetOrderByReference
+      consumes: []
+      produces:
+        - application/json
+        - text/json
+        - application/xml
+        - text/xml
+      parameters:
+        - name: orderReference
+          in: path
+          description: The order identifier
+          required: true
+          type: string
+        - name: clientIdentifier
+          in: path
+          description: The client identifier
+          required: true
+          type: string
+      responses:
+        '200':
+          description: Found and returned a result
+          schema:
+            $ref: '#/definitions/OrderSearchResult'
+        '403':
+          description: Not authorized to make the requested call
+        '404':
+          description: Order not found
+        '500':
+          description: Returned in the case of an unexpected fault
+  '/skus/{skuIdentifier}/locations':
+    get:
+      tags:
+        - Sku
+      summary: >-
+        Finds the available quantities of a SKU by location, optionally
+        filtering results.
+      operationId: Sku_LocationSearchByIdentifier
+      consumes: []
+      produces:
+        - application/json
+        - text/json
+      parameters:
+        - name: skuIdentifier
+          in: path
+          description: The identifier for the SKU.
+          required: true
+          type: string
+        - name: criteria.clientIdentifier
+          in: query
+          required: false
+          type: string
+        - name: criteria.skuIdentifier
+          in: query
+          required: false
+          type: string
+        - name: criteria.radiusFilter.longitude
+          in: query
+          required: false
+          type: number
+          format: double
+        - name: criteria.radiusFilter.latitude
+          in: query
+          required: false
+          type: number
+          format: double
+        - name: criteria.radiusFilter.searchRadiusKm
+          in: query
+          required: false
+          type: number
+          format: double
+        - name: criteria.page
+          in: query
+          required: false
+          type: integer
+          format: int32
+      responses:
+        '200':
+          description: 'Search was successful, and results were returned'
+          schema:
+            $ref: '#/definitions/PagedList[SkuLocationSearchResultRepresentation]'
+        '400':
+          description: No search criteria specified
+        '500':
+          description: Returned in the case of an unexpected fault
+  '/Destinations/{destinationIdentifier}':
+    get:
+      tags:
+        - Destinations
+      summary: Gets a destination.
+      operationId: Destinations_GetDestinationWithoutClientIdentifier
+      consumes: []
+      produces:
+        - application/json
+        - text/json
+        - application/xml
+        - text/xml
+      parameters:
+        - name: destinationIdentifier
+          in: path
+          description: The destination Identifier to look for
+          required: true
+          type: string
+      responses:
+        '200':
+          description: Destionation accepted for processing
+          schema:
+            $ref: '#/definitions/DestinationRepresentation'
+        '403':
+          description: Not authorized to make the requested call
+        '404':
+          description: The destination was not found.
+        '500':
+          description: Returned in the case of an unexpected fault
+    put:
+      tags:
+        - Destinations
+      summary: Updates an existing destination.
+      operationId: Destinations_UpdateDestinationWithoutClientIdentifier
+      consumes:
+        - application/json
+        - text/json
+        - application/xml
+        - text/xml
+        - application/x-www-form-urlencoded
+      produces:
+        - application/json
+        - text/json
+        - application/xml
+        - text/xml
+      parameters:
+        - name: createLocationArgs
+          in: body
+          description: The details for the destination to be created.
+          required: true
+          schema:
+            $ref: '#/definitions/DestinationRepresentation'
+        - name: destinationIdentifier
+          in: path
+          required: true
+          type: string
+      responses:
+        '200':
+          description: Destionation accepted for processing
+          schema:
+            $ref: '#/definitions/DestinationRepresentation'
+        '400':
+          description: >-
+            The supplied destination failed validation due to invalid fields
+            and/or missing mandatory fields.  Details of the validation
+            failure(s) will be returned in the response.
+        '403':
+          description: Not authorized to make the requested call
+        '409':
+          description: The supplied destination reference is already in use.
+        '500':
+          description: Returned in the case of an unexpected fault
+  '/Orders/{orderReference}/skus':
+    post:
+      tags:
+        - Orders
+      summary: Adds the SKU(s) to the order.
+      operationId: Orders_AddSkus
+      consumes:
+        - application/json
+        - text/json
+        - application/xml
+        - text/xml
+        - application/x-www-form-urlencoded
+      produces:
+        - application/json
+        - text/json
+        - application/xml
+        - text/xml
+      parameters:
+        - name: orderReference
+          in: path
+          description: ''
+          required: true
+          type: string
+        - name: skus
+          in: body
+          description: ''
+          required: true
+          schema:
+            $ref: '#/definitions/SkuAssignmentRepresentation'
+      responses:
+        '200':
+          description: The assign request was accepted for processing.
+          schema:
+            $ref: '#/definitions/SkuAssignmentRepresentation'
+        '400':
+          description: The supplied order or SKU was not found.
+        '403':
+          description: Not authorized to make the requested call
+        '500':
+          description: Returned in the case of an unexpected fault
+    delete:
+      tags:
+        - Orders
+      summary: Removes the SKU(s) from the order.
+      operationId: Orders_RemoveSkus
+      consumes:
+        - application/json
+        - text/json
+        - application/xml
+        - text/xml
+        - application/x-www-form-urlencoded
+      produces:
+        - application/json
+        - text/json
+        - application/xml
+        - text/xml
+      parameters:
+        - name: orderReference
+          in: path
+          description: ''
+          required: true
+          type: string
+        - name: skus
+          in: body
+          description: ''
+          required: true
+          schema:
+            $ref: '#/definitions/SkuAssignmentRepresentation'
+      responses:
+        '200':
+          description: The unassign request was accepted for processing.
+          schema:
+            $ref: '#/definitions/SkuAssignmentRepresentation'
+        '400':
+          description: The supplied order or SKU was not found.
+        '403':
+          description: Not authorized to make the requested call
+        '500':
+          description: Returned in the case of an unexpected fault
+  '/skus/{identifier}/doors':
+    get:
+      tags:
+        - Sku
+      summary: Returns the doors to assigned to a specified SKU.
+      operationId: Sku_GetDoors
+      consumes: []
+      produces:
+        - application/json
+        - text/json
+        - application/xml
+        - text/xml
+      parameters:
+        - name: identifier
+          in: path
+          description: ''
+          required: true
+          type: string
+        - name: page
+          in: query
+          required: false
+          type: integer
+          format: int32
+      responses:
+        '200':
+          description: Returned the doors to assigned to a specified SKU
+          schema:
+            $ref: '#/definitions/PagedList[SkuDoorAssignmentRepresentation]'
+        '404':
+          description: SKU with specified identifier does not exist
+        '500':
+          description: Returned in the case of an unexpected fault
+  /Destinations:
+    post:
+      tags:
+        - Destinations
+      summary: Creates a new destination.
+      operationId: Destinations_CreateDestinationWithoutClientIdentifier
+      consumes:
+        - application/json
+        - text/json
+        - application/xml
+        - text/xml
+        - application/x-www-form-urlencoded
+      produces:
+        - application/json
+        - text/json
+        - application/xml
+        - text/xml
+      parameters:
+        - name: createLocationArgs
+          in: body
+          description: The details for the destination to be created.
+          required: true
+          schema:
+            $ref: '#/definitions/DestinationRepresentation'
+      responses:
+        '200':
+          description: Destionation accepted for processing
+          schema:
+            $ref: '#/definitions/DestinationRepresentation'
+        '400':
+          description: >-
+            The supplied destination failed validation due to invalid fields
+            and/or missing mandatory fields.  Details of the validation
+            failure(s) will be returned in the response.
+        '403':
+          description: Not authorized to make the requested call
+        '409':
+          description: The supplied destination reference is already in use.
+        '500':
+          description: Returned in the case of an unexpected fault
+  '/Skus/{identifier}/doors':
+    post:
+      tags:
+        - Sku
+      summary: Assigns the specifed Sku to a door at a particular Location.
+      operationId: Sku_AssignDoor
+      consumes:
+        - application/json
+        - text/json
+        - application/xml
+        - text/xml
+        - application/x-www-form-urlencoded
+      produces:
+        - application/json
+        - text/json
+        - application/xml
+        - text/xml
+      parameters:
+        - name: identifier
+          in: path
+          description: ''
+          required: true
+          type: string
+        - name: association
+          in: body
+          description: ''
+          required: true
+          schema:
+            $ref: '#/definitions/SKUDoorIdentifierAssociation'
+      responses:
+        '200':
+          description: Assign request was accepted for processing
+        '404':
+          description: 'Identifier of the sku, or the specified door does not exist'
+        '500':
+          description: Returned in the case of an unexpected fault
+  '/clients/{clientIdentifier}/destinations':
+    post:
+      tags:
+        - Destinations
+      summary: Creates a new destination.
+      operationId: Destinations_CreateDestinationWithClientIdentifier
+      consumes:
+        - application/json
+        - text/json
+        - application/xml
+        - text/xml
+        - application/x-www-form-urlencoded
+      produces:
+        - application/json
+        - text/json
+        - application/xml
+        - text/xml
+      parameters:
+        - name: createLocationArgs
+          in: body
+          description: The details for the destination to be created.
+          required: true
+          schema:
+            $ref: '#/definitions/DestinationRepresentation'
+        - name: clientIdentifier
+          in: path
+          description: The client Identifier to create the destination for
+          required: true
+          type: string
+      responses:
+        '200':
+          description: Destionation accepted for processing
+          schema:
+            $ref: '#/definitions/DestinationRepresentation'
+        '400':
+          description: >-
+            The supplied destination failed validation due to invalid fields
+            and/or missing mandatory fields.  Details of the validation
+            failure(s) will be returned in the response.
+        '403':
+          description: Not authorized to make the requested call
+        '409':
+          description: The supplied destination reference is already in use.
+        '500':
+          description: Returned in the case of an unexpected fault
+  '/Skus/{identifier}/packages':
+    post:
+      tags:
+        - Sku
+      summary: Assigns the specifed Sku to a Package at a particular Location.
+      operationId: Sku_AssignPackage
+      consumes:
+        - application/json
+        - text/json
+        - application/xml
+        - text/xml
+        - application/x-www-form-urlencoded
+      produces:
+        - application/json
+        - text/json
+        - application/xml
+        - text/xml
+      parameters:
+        - name: identifier
+          in: path
+          description: ''
+          required: true
+          type: string
+        - name: package
+          in: body
+          description: ''
+          required: true
+          schema:
+            $ref: '#/definitions/SkuPackageArgs'
+      responses:
+        '200':
+          description: Assign request was accepted for processing
+        '400':
+          description: The specified location or barcode does not exist
+        '404':
+          description: >-
+            Identifier of the sku, or the specified location or barcode does not
+            exist
+        '500':
+          description: Returned in the case of an unexpected fault
+    delete:
+      tags:
+        - Sku
+      summary: >-
+        Unassigns the specifed Sku from a specified Package in the specified
+        Location
+      operationId: Sku_UnassignPackage
+      consumes:
+        - application/json
+        - text/json
+        - application/xml
+        - text/xml
+        - application/x-www-form-urlencoded
+      produces:
+        - application/json
+        - text/json
+        - application/xml
+        - text/xml
+      parameters:
+        - name: identifier
+          in: path
+          description: ''
+          required: true
+          type: string
+        - name: package
+          in: body
+          description: ''
+          required: true
+          schema:
+            $ref: '#/definitions/SkuUnassignArgs'
+      responses:
+        '200':
+          description: Unassign request was accepted for processing
+        '400':
+          description: The specified location or barcode does not exist
+        '404':
+          description: >-
+            identifier of the sku, or the specified location or barcode does not
+            exist
+        '500':
+          description: Returned in the case of an unexpected fault
+  '/Orders/{orderReference}/packages':
+    post:
+      tags:
+        - Orders
+      summary: Adds packages to an order.
+      operationId: Orders_AddPackages
+      consumes:
+        - application/json
+        - text/json
+        - application/xml
+        - text/xml
+        - application/x-www-form-urlencoded
+      produces:
+        - application/json
+        - text/json
+        - application/xml
+        - text/xml
+      parameters:
+        - name: orderReference
+          in: path
+          description: ''
+          required: true
+          type: string
+        - name: packages
+          in: body
+          description: ''
+          required: true
+          schema:
+            $ref: '#/definitions/PackageAssignmentRepresentation'
+      responses:
+        '200':
+          description: The assign request was accepted for processing.
+          schema:
+            $ref: '#/definitions/SkuAssignmentRepresentation'
+        '400':
+          description: The supplied order or package was not found.
+        '403':
+          description: Not authorized to make the requested call
+        '500':
+          description: Returned in the case of an unexpected fault
+    delete:
+      tags:
+        - Orders
+      summary: Removes the package(s) from the order.
+      operationId: Orders_RemovePackages
+      consumes:
+        - application/json
+        - text/json
+        - application/xml
+        - text/xml
+        - application/x-www-form-urlencoded
+      produces:
+        - application/json
+        - text/json
+        - application/xml
+        - text/xml
+      parameters:
+        - name: orderReference
+          in: path
+          description: ''
+          required: true
+          type: string
+        - name: packages
+          in: body
+          description: ''
+          required: true
+          schema:
+            $ref: '#/definitions/PackageAssignmentRepresentation'
+      responses:
+        '200':
+          description: The unassign request was accepted for processing.
+          schema:
+            $ref: '#/definitions/SkuAssignmentRepresentation'
+        '400':
+          description: The supplied order or package was not found.
+        '403':
+          description: Not authorized to make the requested call
+        '500':
+          description: Returned in the case of an unexpected fault
+  /Orders:
+    get:
+      tags:
+        - Orders
+      summary: search for orders using the specified parameters
+      operationId: Orders_Search
+      consumes: []
+      produces:
+        - application/json
+        - text/json
+        - application/xml
+        - text/xml
+      parameters:
+        - name: searchParameters.excludeInventoryOrders
+          in: query
+          required: false
+          type: boolean
+        - name: searchParameters.excludeJobOrders
+          in: query
+          required: false
+          type: boolean
+        - name: searchParameters.orderReference
+          in: query
+          required: false
+          type: string
+        - name: searchParameters.assignedUser
+          in: query
+          required: false
+          type: string
+        - name: searchParameters.creatingUser
+          in: query
+          required: false
+          type: string
+        - name: searchParameters.orderStatus
+          in: query
+          required: false
+          type: string
+          enum:
+            - UnKnown
+            - Draft
+            - Assigned
+            - InProgress
+            - Completed
+            - Cancelled
+        - name: searchParameters.page
+          in: query
+          required: false
+          type: integer
+          format: int32
+      responses:
+        '200':
+          description: Found and returned a result
+          schema:
+            $ref: '#/definitions/OrderListRepresentation'
+        '403':
+          description: Not authorized to make the requested call
+        '500':
+          description: Returned in the case of an unexpected fault
+  '/Locations/{locationIdentifier}/skus':
+    get:
+      tags:
+        - Locations
+      summary: Get a list of skus and quantites at a specified location.
+      operationId: Locations_ListSkusAtLocation
+      consumes: []
+      produces:
+        - application/json
+        - text/json
+        - application/xml
+        - text/xml
+      parameters:
+        - name: locationIdentifier
+          in: path
+          description: ''
+          required: true
+          type: string
+      responses:
+        '200':
+          description: Location found and stock levels returned
+          schema:
+            $ref: '#/definitions/LocationInventoryReport'
+        '400':
+          description: No location identifier specified
+        '404':
+          description: The location doesn't exist
+        '500':
+          description: Returned in the case of an unexpected fault
+  /packages:
+    get:
+      tags:
+        - Packages
+      summary: Returns a paged snapshot of all packages and their associated data.
+      operationId: Packages_Search
+      consumes: []
+      produces:
+        - application/json
+        - text/json
+      parameters:
+        - name: searchTerm.location
+          in: query
+          required: false
+          type: string
+        - name: searchTerm.trackingNumber
+          in: query
+          required: false
+          type: string
+        - name: searchTerm.page
+          in: query
+          required: false
+          type: integer
+          format: int32
+        - name: searchTerm.pageSize
+          in: query
+          required: false
+          type: integer
+          format: int32
+      responses:
+        '200':
+          description: 'Search was successful, and results were returned'
+          schema:
+            $ref: '#/definitions/PagedList[PackageResultRepresentation]'
+        '400':
+          description: No search criteria specified
+        '500':
+          description: Returned in the case of an unexpected fault
+definitions:
+  CountryRepresentation:
+    type: object
+    properties:
+      name:
+        type: string
+      code:
+        type: string
+  'PagedList[SkuLocationSearchResultRepresentation]':
+    type: object
+    properties:
+      resourceList:
+        type: array
+        items:
+          $ref: '#/definitions/SkuLocationSearchResultRepresentation'
+      totalResults:
+        format: int32
+        type: integer
+      totalPages:
+        format: int32
+        type: integer
+      page:
+        format: int32
+        type: integer
+  UserRepresentation:
+    type: object
+    properties:
+      identifier:
+        type: string
+      username:
+        type: string
+      firstName:
+        type: string
+      lastName:
+        type: string
+      emailAddress:
+        type: string
+      roles:
+        type: string
+      suspended:
+        type: boolean
+  TechOrderRepresentation:
+    type: object
+    properties:
+      orderReference:
+        type: string
+      user:
+        type: string
+      skus:
+        type: array
+        items:
+          $ref: '#/definitions/TechOrderSku'
+      destinationIdentifier:
+        type: string
+      notes:
+        type: string
+      clientIdentifier:
+        type: string
+  PackageCollectionAssignment:
+    type: object
+    properties:
+      barcode:
+        type: string
+      locationIdentifier:
+        type: string
+      preadvise:
+        type: boolean
+      notes:
+        type: string
+  UserListRepresentation:
+    type: object
+    properties:
+      resourceList:
+        type: array
+        items:
+          $ref: '#/definitions/UserRepresentation'
+      totalResults:
+        format: int32
+        type: integer
+      totalPages:
+        format: int32
+        type: integer
+      page:
+        format: int32
+        type: integer
+  JobOrderRepresentation:
+    type: object
+    properties:
+      orderReference:
+        type: string
+      user:
+        type: string
+      packages:
+        type: array
+        items:
+          $ref: '#/definitions/OrderPackage'
+  PackageSearchCriteria:
+    type: object
+    properties:
+      location:
+        type: string
+      trackingNumber:
+        type: string
+      page:
+        format: int32
+        type: integer
+      pageSize:
+        format: int32
+        type: integer
+  PackageResultRepresentation:
+    type: object
+    properties:
+      barcode:
+        type: string
+      location:
+        type: string
+      door:
+        type: string
+      at:
+        format: date-time
+        type: string
+      user:
+        type: string
+      doorDetails:
+        $ref: '#/definitions/DoorDetailsRepresentation'
+      locationDetails:
+        $ref: '#/definitions/LocationDetailsRepresentation'
+  SkuLocationSearchCriteria:
+    type: object
+    properties:
+      clientIdentifier:
+        type: string
+      skuIdentifier:
+        type: string
+      radiusFilter:
+        $ref: '#/definitions/SearchRadiusFilter'
+      page:
+        format: int32
+        type: integer
+  PackageAssignmentRepresentation:
+    type: object
+    properties:
+      packages:
+        type: array
+        items:
+          $ref: '#/definitions/OrderPackage'
+  OrderSku:
+    type: object
+    properties:
+      sku:
+        type: string
+      quantity:
+        format: int32
+        type: integer
+      location:
+        type: string
+      barcodes:
+        type: array
+        items:
+          type: string
+  OrderSearchResult:
+    type: object
+    properties:
+      orderReference:
+        type: string
+      orderType:
+        type: string
+      assignedTo:
+        type: string
+      createdBy:
+        type: string
+      status:
+        type: string
+  SkuLocationSearchResultRepresentation:
+    type: object
+    properties:
+      location:
+        $ref: '#/definitions/LocationRepresentation'
+      availableQuantity:
+        format: int32
+        type: integer
+  'PagedList[SkuResultRepresentation]':
+    type: object
+    properties:
+      resourceList:
+        type: array
+        items:
+          $ref: '#/definitions/SkuResultRepresentation'
+      totalResults:
+        format: int32
+        type: integer
+      totalPages:
+        format: int32
+        type: integer
+      page:
+        format: int32
+        type: integer
+  SkuResultRepresentation:
+    type: object
+    properties:
+      name:
+        type: string
+      identifier:
+        type: string
+      description:
+        type: string
+      isSuspended:
+        type: boolean
+      packages:
+        type: array
+        items:
+          $ref: '#/definitions/SkuResultItem'
+  UserSearchArgs:
+    type: object
+    properties:
+      orderReference:
+        type: string
+      username:
+        type: string
+      pageSize:
+        format: int32
+        type: integer
+      identifier:
+        type: string
+      doorName:
+        type: string
+      barcode:
+        type: string
+      page:
+        format: int32
+        type: integer
+      locationName:
+        type: string
+      suspended:
+        type: boolean
+  OrderListRepresentation:
+    type: object
+    properties:
+      orders:
+        type: array
+        items:
+          $ref: '#/definitions/OrderSearchResult'
+      totalResults:
+        format: int32
+        type: integer
+      totalPages:
+        format: int32
+        type: integer
+      page:
+        format: int32
+        type: integer
+  InventoryOrderRepresentation:
+    type: object
+    properties:
+      orderReference:
+        type: string
+      user:
+        type: string
+      skus:
+        type: array
+        items:
+          $ref: '#/definitions/OrderSku'
+  LocationDetailsRepresentation:
+    type: object
+    properties:
+      name:
+        type: string
+  PackageCollectionUnassignment:
+    type: object
+    properties:
+      barcode:
+        type: string
+      locationIdentifier:
+        type: string
+  UserIdentifierRepresentation:
+    type: object
+    properties:
+      user:
+        type: string
+  StockItem:
+    type: object
+    properties:
+      skuIdentifier:
+        type: string
+      quantity:
+        format: int32
+        type: integer
+  'PagedList[PackageResultRepresentation]':
+    type: object
+    properties:
+      resourceList:
+        type: array
+        items:
+          $ref: '#/definitions/PackageResultRepresentation'
+      totalResults:
+        format: int32
+        type: integer
+      totalPages:
+        format: int32
+        type: integer
+      page:
+        format: int32
+        type: integer
+  SearchRadiusFilter:
+    type: object
+    properties:
+      longitude:
+        format: double
+        type: number
+      latitude:
+        format: double
+        type: number
+      searchRadiusKm:
+        format: double
+        type: number
+  SkuUnassignArgs:
+    type: object
+    properties:
+      location:
+        type: string
+      barcode:
+        type: string
+  OrderSearchParameters:
+    type: object
+    properties:
+      excludeInventoryOrders:
+        type: boolean
+      excludeJobOrders:
+        type: boolean
+      orderReference:
+        type: string
+      assignedUser:
+        type: string
+      creatingUser:
+        type: string
+      orderStatus:
+        enum:
+          - UnKnown
+          - Draft
+          - Assigned
+          - InProgress
+          - Completed
+          - Cancelled
+        type: string
+      page:
+        format: int32
+        type: integer
+  SKUDoorIdentifierAssociation:
+    type: object
+    properties:
+      skuIdentifier:
+        type: string
+      doorIdentifier:
+        type: string
+      minimumStockLevel:
+        format: int32
+        type: integer
+  DoorRepresentation:
+    type: object
+    properties:
+      identifier:
+        type: string
+      name:
+        type: string
+  DoorDetailsRepresentation:
+    type: object
+    properties:
+      supportsJobOrders:
+        type: boolean
+      supportsInventoryOrders:
+        type: boolean
+  SkuDoorAssignmentRepresentation:
+    type: object
+    properties:
+      door:
+        $ref: '#/definitions/DoorRepresentation'
+      location:
+        $ref: '#/definitions/LocationRepresentation'
+      minimumStockLevel:
+        format: int32
+        type: integer
+  LocationRepresentation:
+    type: object
+    properties:
+      identifier:
+        type: string
+      name:
+        type: string
+      longitude:
+        format: double
+        type: number
+      latitude:
+        format: double
+        type: number
+  SkuSearchCriteria:
+    type: object
+    properties:
+      identifier:
+        type: string
+      door:
+        type: string
+      location:
+        type: string
+      barcode:
+        type: string
+      suspended:
+        type: boolean
+      page:
+        format: int32
+        type: integer
+  DestinationRepresentation:
+    type: object
+    properties:
+      name:
+        type: string
+      identifier:
+        type: string
+      latitude:
+        format: double
+        type: number
+      longitude:
+        format: double
+        type: number
+      address:
+        $ref: '#/definitions/AddressRepresentation'
+      notes:
+        type: string
+      suspended:
+        type: boolean
+      clientIdentifier:
+        type: string
+  SkuPackageArgs:
+    type: object
+    properties:
+      location:
+        type: string
+      barcode:
+        type: string
+      preAdvise:
+        type: boolean
+  'PagedList[SkuDoorAssignmentRepresentation]':
+    type: object
+    properties:
+      resourceList:
+        type: array
+        items:
+          $ref: '#/definitions/SkuDoorAssignmentRepresentation'
+      totalResults:
+        format: int32
+        type: integer
+      totalPages:
+        format: int32
+        type: integer
+      page:
+        format: int32
+        type: integer
+  SkuAssignmentRepresentation:
+    type: object
+    properties:
+      skus:
+        type: array
+        items:
+          $ref: '#/definitions/OrderSku'
+  UpdateSku:
+    type: object
+    properties:
+      identifier:
+        type: string
+      description:
+        type: string
+      name:
+        type: string
+  LocationInventoryReport:
+    type: object
+    properties:
+      items:
+        type: array
+        items:
+          $ref: '#/definitions/StockItem'
+  CreateSku:
+    type: object
+    properties:
+      identifier:
+        type: string
+      description:
+        type: string
+      name:
+        type: string
+  TechOrderSku:
+    type: object
+    properties:
+      skuIdentifier:
+        type: string
+      quantity:
+        format: int32
+        type: integer
+  AddressRepresentation:
+    type: object
+    properties:
+      address1:
+        type: string
+      address2:
+        type: string
+      address3:
+        type: string
+      address4:
+        type: string
+      address5:
+        type: string
+      postalCode:
+        type: string
+      country:
+        $ref: '#/definitions/CountryRepresentation'
+  SkuResultItem:
+    type: object
+    properties:
+      location:
+        type: string
+      door:
+        type: string
+      barcode:
+        type: string
+  OrderPackage:
+    type: object
+    properties:
+      barcode:
+        type: string
+      location:
+        type: string
+      door:
+        type: string
